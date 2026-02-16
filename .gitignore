@@ -1,0 +1,14 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+.env
+*.js.map
+*.d.ts
+# Allow config files and public builds
+!vitest.config.ts
+!playwright.config.ts
+# Only ignore JS in src/ and tests/, not public/
+src/**/*.js
+tests/**/*.js
+public/app.js
