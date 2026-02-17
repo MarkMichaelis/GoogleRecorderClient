@@ -19,8 +19,8 @@ Before calling any data API, the web app fetches runtime configuration.
 
 ```json
 {
-  "apiKey": "REDACTED_API_KEY",
-  "email": "REDACTED_EMAIL",
+  "apiKey": "<REDACTED — fetched at runtime from /clientconfig>",
+  "email": "<user-email>",
   "firstPartyApiUrl": "https://pixelrecorder-pa.clients6.google.com",
   "fileDownloadUrl": "https://pixelrecorder-pa.googleapis.com"
 }

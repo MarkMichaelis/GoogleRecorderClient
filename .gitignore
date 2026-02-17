@@ -5,6 +5,12 @@ playwright-report/
 .env
 *.js.map
 *.d.ts
+
+# Sensitive / captured network data — NEVER commit
+*.har
+*-cookies.json
+*-credential.xml
+
 # Allow config files and public builds
 !vitest.config.ts
 !playwright.config.ts
