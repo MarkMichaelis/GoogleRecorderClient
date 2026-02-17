@@ -1,0 +1,35 @@
+{
+  "name": "google-recorder-client",
+  "version": "0.1.0",
+  "description": "Web client for Google Recorder with batch rename capabilities",
+  "type": "module",
+  "scripts": {
+    "dev": "npx concurrently \"npx esbuild src/app.ts --bundle --outfile=extension/panel/app.js --sourcemap --watch\" \"npx serve extension/panel -l 3000\"",
+    "build": "npx esbuild src/app.ts --bundle --outfile=extension/panel/app.js --sourcemap --minify",
+    "build:extension": "npx esbuild src/app.ts --bundle --outfile=extension/panel/app.js --sourcemap",
+    "pretest": "npm run build:extension",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pretest:e2e": "npm run build:extension",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "google-recorder",
+    "transcription"
+  ],
+  "author": "Mark Michaelis",
+  "license": "ISC",
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
+    "@playwright/test": "^1.58.2",
+    "@types/chrome": "^0.1.36",
+    "@types/node": "^25.2.3",
+    "concurrently": "^9.2.1",
+    "esbuild": "^0.27.3",
+    "jsdom": "^25.0.1",
+    "serve": "^14.2.5",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Google Recorder Client",
+  "version": "0.1.0",
+  "description": "Enhanced management of Google Recorder recordings — view transcripts, rename, and auto-rename.",
+  "permissions": [
+    "sidePanel",
+    "activeTab",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://recorder.google.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://recorder.google.com/*"],
+      "js": ["content-script.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "side_panel": {
+    "default_path": "panel/index.html"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["page-interceptor.js"],
+      "matches": ["https://recorder.google.com/*"]
+    }
+  ],
+  "action": {
+    "default_title": "Google Recorder Client"
+  },
+  "icons": {}
+}
