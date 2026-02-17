@@ -12,3 +12,8 @@ playwright-report/
 src/**/*.js
 tests/**/*.js
 public/app.js
+# PowerShell
+*.ps1xml
+*-credential.xml
+*-cookies.json
+scripts/*.log
