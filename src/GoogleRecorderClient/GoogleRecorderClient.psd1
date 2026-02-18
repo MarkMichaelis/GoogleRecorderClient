@@ -18,6 +18,7 @@
         'Get-GoogleRecording'
         'Get-GoogleRecorderLabel'
         'Get-GoogleRecordingTranscript'
+        'Rename-GoogleRecording'
         'Save-GoogleRecordingAudio'
         'Test-GoogleRecorderSearch'
     )
