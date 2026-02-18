@@ -66,7 +66,7 @@ Describe 'Get-GoogleRecordingTranscript' {
         $result = @(Get-GoogleRecordingTranscript -RecordingId 'test-id')
 
         $result.Count | Should -BeGreaterOrEqual 1
-        $result[0].PSTypeName | Should -Contain 'GoogleRecorder.TranscriptWord'
+        $result[0].PSTypeNames | Should -Contain 'GoogleRecorder.TranscriptWord'
         $result[0].Word | Should -Be 'Hello,'
         $result[0].StartMs | Should -Be 3620
         $result[0].EndMs | Should -Be 3860
@@ -111,7 +111,8 @@ Describe 'Get-GoogleRecordingTranscript' {
                 ,@(
                     ,@(
                         ,@(
-                            @('hi', 'Hi.', '0', '500', $null, $null, @(1, 1))
+                            @('hello', 'Hello,', '3620', '3860', $null, $null, @(1, 1)),
+                            @('world', 'world.', '3860', '4100', $null, $null, @(1, 1))
                         )
                     )
                 )
