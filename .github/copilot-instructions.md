@@ -7,9 +7,12 @@ This is a modern front-end web project using HTML, CSS, and JavaScript/TypeScrip
 
 ## Development Philosophy
 
-1. **Test-Driven Development (TDD)** — Write tests before implementation code.
-2. **Functional Web Testing** — Validate user-facing behavior with browser-level tests.
-3. **Continuous Refactoring** — Eliminate duplication after every green step.
+1. **Test-Driven Development (TDD)** — Write tests first, always. No production code without a failing test.
+2. **Systematic over ad-hoc** — Process over guessing. Follow structured workflows.
+3. **Complexity reduction** — Simplicity as primary goal. YAGNI ruthlessly.
+4. **Evidence over claims** — Verify before declaring success. Run commands, read output, present facts.
+5. **Functional Web Testing** — Validate user-facing behavior with browser-level tests.
+6. **Continuous Refactoring** — Eliminate duplication after every green step.
 
 ## Code Style
 
@@ -61,11 +64,13 @@ Dedicated agent prompts live in `.github/agents/` using the `.agent.md` format:
 
 | Agent | Purpose |
 |---|---|
-| `tdd.agent.md` | Red → Green → Refactor cycle for Vitest unit tests |
-| `web-testing.agent.md` | Generate & maintain Playwright functional tests |
-| `refactor.agent.md` | Identify and remove duplication after each green step |
-| `code-review.agent.md` | Independent code review using a different LLM (`o4-mini`) |
-| `dev-loop.agent.md` | Orchestrator: TDD → Refactor → Web Test → Review → Fix → Repeat |
+| `brainstorming.agent.md` | Socratic design refinement — explore intent, propose approaches, get approval before coding |
+| `tdd.agent.md` | Red → Green → Refactor cycle with Iron Law enforcement (no code without failing test) |
+| `web-testing.agent.md` | Generate & maintain Playwright functional tests with verification-before-completion |
+| `refactor.agent.md` | Identify and remove duplication after each green step — YAGNI, simplicity first |
+| `code-review.agent.md` | Independent code review using a different LLM (`o4-mini`) with severity-based findings |
+| `systematic-debugging.agent.md` | 4-phase root cause investigation — no fixes without understanding the problem first |
+| `dev-loop.agent.md` | Orchestrator: Brainstorm → Plan → TDD → Refactor → Web Test → Verify → Review → Fix → Repeat |
 
 ### Development Workflow
 
@@ -73,5 +78,8 @@ Use `@dev-loop` to drive the full quality cycle for any feature. It coordinates
 all other agents in order and repeats until the code review passes cleanly.
 
 ```
-TDD (Red→Green) → Refactor → Web Test → Code Review (o4-mini) → Fix → Re-Review
+Brainstorm → Plan → TDD (Red→Green) → Refactor → Web Test → Verify → Code Review (o4-mini) → Fix → Re-Review
 ```
+
+Use `@brainstorming` when exploring a new idea before committing to implementation.
+Use `@systematic-debugging` when encountering any bug or unexpected behavior.
