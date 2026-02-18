@@ -19,6 +19,7 @@
         'Get-GoogleRecorderLabel'
         'Get-GoogleRecordingAudioTag'
         'Get-GoogleRecordingTranscript'
+        'Get-GoogleRecordingWaveform'
         'Save-GoogleRecordingAudio'
         'Test-GoogleRecorderSearch'
     )
