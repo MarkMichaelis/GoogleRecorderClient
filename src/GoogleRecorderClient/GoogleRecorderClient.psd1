@@ -17,6 +17,7 @@
         'Disconnect-GoogleRecorder'
         'Get-GoogleRecording'
         'Get-GoogleRecorderLabel'
+        'Get-GoogleRecordingAudioTag'
         'Get-GoogleRecordingShare'
         'Get-GoogleRecordingTranscript'
         'Save-GoogleRecordingAudio'
