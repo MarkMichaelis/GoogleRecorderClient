@@ -50,10 +50,12 @@ Update-FormatData -PrependPath (Join-Path $PSScriptRoot 'GoogleRecorderClient.Fo
 Export-ModuleMember -Function @(
     'Connect-GoogleRecorder'
     'Disconnect-GoogleRecorder'
+    'Get-GoogleRecorderLabel'
     'Get-GoogleRecording'
     'Get-GoogleRecordingAudioTag'
     'Get-GoogleRecordingShare'
     'Get-GoogleRecordingTranscript'
     'Get-GoogleRecordingWaveform'
     'Save-GoogleRecordingAudio'
+    'Test-GoogleRecorderSearch'
 )
