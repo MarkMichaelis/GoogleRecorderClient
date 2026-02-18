@@ -20,6 +20,7 @@
         'Get-GoogleRecordingAudioTag'
         'Get-GoogleRecordingShare'
         'Get-GoogleRecordingTranscript'
+        'Get-GoogleRecordingWaveform'
         'Save-GoogleRecordingAudio'
         'Test-GoogleRecorderSearch'
     )
