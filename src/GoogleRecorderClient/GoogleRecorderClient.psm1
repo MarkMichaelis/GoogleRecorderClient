@@ -52,4 +52,5 @@ Export-ModuleMember -Function @(
     'Disconnect-GoogleRecorder'
     'Get-GoogleRecording'
     'Save-GoogleRecordingAudio'
+    'Test-GoogleRecorderSearch'
 )
