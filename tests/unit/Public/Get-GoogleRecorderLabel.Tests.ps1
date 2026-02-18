@@ -10,6 +10,7 @@ Describe 'Get-GoogleRecorderLabel' {
 
     It 'throws when not connected' {
         InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
+        Mock -ModuleName GoogleRecorderClient Test-Path { $false }
 
         { Get-GoogleRecorderLabel } | Should -Throw '*Not connected*'
     }

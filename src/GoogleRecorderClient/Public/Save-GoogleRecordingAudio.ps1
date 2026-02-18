@@ -1,4 +1,4 @@
-function Save-GoogleRecordingAudio {
+﻿function Save-GoogleRecordingAudio {
     <#
     .SYNOPSIS
         Downloads the audio file for a Google Recorder recording.
@@ -38,9 +38,7 @@ function Save-GoogleRecordingAudio {
     )
 
     process {
-        if (-not $script:RecorderSession) {
-            throw 'Not connected to Google Recorder. Run Connect-GoogleRecorder first.'
-        }
+        Assert-RecorderSession
 
         $session  = $script:RecorderSession
         $filePath = Resolve-AudioOutputPath -OutputPath $OutputPath -RecordingId $RecordingId
