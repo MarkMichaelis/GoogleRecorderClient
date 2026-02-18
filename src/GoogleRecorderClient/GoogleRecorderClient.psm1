@@ -53,5 +53,6 @@ Export-ModuleMember -Function @(
     'Get-GoogleRecording'
     'Get-GoogleRecordingAudioTag'
     'Get-GoogleRecordingShare'
+    'Get-GoogleRecordingWaveform'
     'Save-GoogleRecordingAudio'
 )
