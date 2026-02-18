@@ -32,6 +32,9 @@
         "Copy-Item": true,
         "Get-Module": true,
         "Remove-Module": true,
-        "Invoke-ScriptAnalyzer": true
+        "Invoke-ScriptAnalyzer": true,
+        "Push-Location": true,
+        ".\\scripts\\Invoke-Tests.ps1": true,
+        "Resolve-Path": true
     }
 }

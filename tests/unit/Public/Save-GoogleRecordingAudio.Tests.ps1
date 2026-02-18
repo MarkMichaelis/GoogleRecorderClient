@@ -10,6 +10,7 @@ Describe 'Save-GoogleRecordingAudio' {
 
     It 'throws when not connected' {
         InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
+        Mock -ModuleName GoogleRecorderClient Test-Path { $false }
 
         { Save-GoogleRecordingAudio -RecordingId 'some-id' -OutputPath 'test.m4a' } | Should -Throw '*Not connected*'
     }

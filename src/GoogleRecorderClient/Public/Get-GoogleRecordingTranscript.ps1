@@ -1,4 +1,4 @@
-function Get-GoogleRecordingTranscript {
+﻿function Get-GoogleRecordingTranscript {
     <#
     .SYNOPSIS
         Retrieves the transcript for a Google Recorder recording.
@@ -38,9 +38,8 @@ function Get-GoogleRecordingTranscript {
         [switch]$AsText
     )
 
-    if (-not $script:RecorderSession) {
-        throw 'Not connected to Google Recorder. Run Connect-GoogleRecorder first.'
-    }
+    process {
+    Assert-RecorderSession
 
     $body   = "[`"$RecordingId`"]"
     $result = Invoke-RecorderRpc -Method 'GetTranscription' -Body $body
@@ -73,4 +72,5 @@ function Get-GoogleRecordingTranscript {
     }
 
     return $words
+    }
 }

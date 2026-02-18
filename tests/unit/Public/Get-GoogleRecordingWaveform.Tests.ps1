@@ -10,6 +10,7 @@ Describe 'Get-GoogleRecordingWaveform' {
 
     It 'throws when not connected' {
         InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
+        Mock -ModuleName GoogleRecorderClient Test-Path { $false }
 
         { Get-GoogleRecordingWaveform -RecordingId 'some-id' } | Should -Throw '*Not connected*'
     }

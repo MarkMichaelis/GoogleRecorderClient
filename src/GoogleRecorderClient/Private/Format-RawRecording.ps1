@@ -1,4 +1,4 @@
-function Format-RawRecording {
+﻿function Format-RawRecording {
     <#
     .SYNOPSIS
         Converts a raw protobuf-JSON recording array into a friendly PSCustomObject.

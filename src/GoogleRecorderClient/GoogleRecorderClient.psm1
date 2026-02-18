@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 
 <#
 .SYNOPSIS
@@ -56,6 +56,7 @@ Export-ModuleMember -Function @(
     'Get-GoogleRecordingShare'
     'Get-GoogleRecordingTranscript'
     'Get-GoogleRecordingWaveform'
+    'Rename-GoogleRecording'
     'Save-GoogleRecordingAudio'
     'Test-GoogleRecorderSearch'
 )

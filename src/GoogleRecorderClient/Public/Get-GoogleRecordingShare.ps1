@@ -1,4 +1,4 @@
-function Get-GoogleRecordingShare {
+﻿function Get-GoogleRecordingShare {
     <#
     .SYNOPSIS
         Retrieves the share list for a Google Recorder recording.
@@ -28,9 +28,8 @@ function Get-GoogleRecordingShare {
         [string]$RecordingId
     )
 
-    if (-not $script:RecorderSession) {
-        throw 'Not connected to Google Recorder. Run Connect-GoogleRecorder first.'
-    }
+    process {
+    Assert-RecorderSession
 
     $body   = "[`"$RecordingId`"]"
     $result = Invoke-RecorderRpc -Method 'GetShareList' -Body $body
@@ -45,5 +44,6 @@ function Get-GoogleRecordingShare {
             Email      = $entry[0]
             Role       = $entry[1]
         }
+    }
     }
 }

@@ -1,4 +1,4 @@
-function Test-GoogleRecorderSearch {
+﻿function Test-GoogleRecorderSearch {
     <#
     .SYNOPSIS
         Tests whether global search is available for the user's recordings.
@@ -17,9 +17,7 @@ function Test-GoogleRecorderSearch {
     [OutputType([bool])]
     param()
 
-    if (-not $script:RecorderSession) {
-        throw 'Not connected to Google Recorder. Run Connect-GoogleRecorder first.'
-    }
+    Assert-RecorderSession
 
     $result = Invoke-RecorderRpc -Method 'GetGlobalSearchReadiness' -Body '[]'
 
