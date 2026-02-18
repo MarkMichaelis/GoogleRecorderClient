@@ -76,12 +76,17 @@ Describe 'Get-GoogleRecordingAudioTag' {
         }
 
         Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc {
-            return ,@(,@(@(0, '0', 0)))
+            return ,@(
+                ,@(
+                    @(0, '0', 0),
+                    @(1, '3169', 0.052)
+                )
+            )
         }
 
         $input = [PSCustomObject]@{ RecordingId = 'pipe-id' }
         $result = @($input | Get-GoogleRecordingAudioTag)
 
-        $result.Count | Should -Be 1
+        $result.Count | Should -Be 2
     }
 }
