@@ -1,4 +1,4 @@
-function Get-GoogleRecorderLabel {
+﻿function Get-GoogleRecorderLabel {
     <#
     .SYNOPSIS
         Retrieves all available labels/tags for the user's recordings.
@@ -17,9 +17,7 @@ function Get-GoogleRecorderLabel {
     [OutputType([PSCustomObject])]
     param()
 
-    if (-not $script:RecorderSession) {
-        throw 'Not connected to Google Recorder. Run Connect-GoogleRecorder first.'
-    }
+    Assert-RecorderSession
 
     $result = Invoke-RecorderRpc -Method 'ListLabels' -Body '[]'
 

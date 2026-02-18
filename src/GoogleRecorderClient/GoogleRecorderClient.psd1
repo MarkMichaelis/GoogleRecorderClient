@@ -1,4 +1,4 @@
-@{
+﻿@{
     # Module identity
     RootModule        = 'GoogleRecorderClient.psm1'
     ModuleVersion     = '0.1.0'
@@ -15,12 +15,13 @@
     FunctionsToExport = @(
         'Connect-GoogleRecorder'
         'Disconnect-GoogleRecorder'
-        'Get-GoogleRecording'
         'Get-GoogleRecorderLabel'
+        'Get-GoogleRecording'
         'Get-GoogleRecordingAudioTag'
         'Get-GoogleRecordingShare'
         'Get-GoogleRecordingTranscript'
         'Get-GoogleRecordingWaveform'
+        'Rename-GoogleRecording'
         'Save-GoogleRecordingAudio'
         'Test-GoogleRecorderSearch'
     )

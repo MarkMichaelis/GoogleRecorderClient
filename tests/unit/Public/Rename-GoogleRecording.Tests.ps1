@@ -3,7 +3,7 @@ BeforeAll {
     Import-Module (Resolve-Path $modulePath) -Force -ErrorAction Stop
 }
 
-Describe 'Test-GoogleRecorderSearch' {
+Describe 'Rename-GoogleRecording' {
     AfterEach {
         InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
     }
@@ -12,10 +12,11 @@ Describe 'Test-GoogleRecorderSearch' {
         InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
         Mock -ModuleName GoogleRecorderClient Test-Path { $false }
 
-        { Test-GoogleRecorderSearch } | Should -Throw '*Not connected*'
+        { Rename-GoogleRecording -RecordingId 'some-id' -NewTitle 'New' } |
+            Should -Throw '*Not connected*'
     }
 
-    It 'calls GetGlobalSearchReadiness RPC with empty body' {
+    It 'calls UpdateRecordingTitle RPC with recording ID and new title' {
         InModuleScope GoogleRecorderClient {
             $script:RecorderSession = @{
                 CookieHeader = 'SAPISID=val'; ApiKey = 'k'; Email = 'x'; BaseUrl = 'https://example.com'
@@ -24,61 +25,53 @@ Describe 'Test-GoogleRecorderSearch' {
 
         Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc {
             param($Method, $Body)
-            $Method | Should -Be 'GetGlobalSearchReadiness'
-            $Body | Should -Be '[]'
-            return ,@(1)
+            $Method | Should -Be 'UpdateRecordingTitle'
+            $Body | Should -Be '["rec-123","My New Title"]'
+            return $null
         }
 
-        $result = Test-GoogleRecorderSearch
+        Rename-GoogleRecording -RecordingId 'rec-123' -NewTitle 'My New Title'
 
-        $result | Should -Not -BeNullOrEmpty
+        Should -Invoke -ModuleName GoogleRecorderClient Invoke-RecorderRpc -Times 1 -Exactly
     }
 
-    It 'returns $true when search is ready' {
+    It 'validates that NewTitle is not null or empty' {
         InModuleScope GoogleRecorderClient {
             $script:RecorderSession = @{
                 CookieHeader = 'SAPISID=val'; ApiKey = 'k'; Email = 'x'; BaseUrl = 'https://example.com'
             }
         }
 
-        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc {
-            return ,@(1)
-        }
-
-        $result = Test-GoogleRecorderSearch
-
-        $result | Should -BeTrue
+        { Rename-GoogleRecording -RecordingId 'rec-123' -NewTitle '' } |
+            Should -Throw
     }
 
-    It 'returns $false when search is not ready' {
+    It 'accepts RecordingId from pipeline by property name' {
         InModuleScope GoogleRecorderClient {
             $script:RecorderSession = @{
                 CookieHeader = 'SAPISID=val'; ApiKey = 'k'; Email = 'x'; BaseUrl = 'https://example.com'
             }
         }
 
-        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc {
-            return ,@()
-        }
+        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc { return $null }
 
-        $result = Test-GoogleRecorderSearch
+        $input = [PSCustomObject]@{ RecordingId = 'pipe-id' }
+        $input | Rename-GoogleRecording -NewTitle 'Piped Title'
 
-        $result | Should -BeFalse
+        Should -Invoke -ModuleName GoogleRecorderClient Invoke-RecorderRpc -Times 1 -Exactly
     }
 
-    It 'returns $false when response is 0' {
+    It 'supports -WhatIf without calling the API' {
         InModuleScope GoogleRecorderClient {
             $script:RecorderSession = @{
                 CookieHeader = 'SAPISID=val'; ApiKey = 'k'; Email = 'x'; BaseUrl = 'https://example.com'
             }
         }
 
-        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc {
-            return ,@(0)
-        }
+        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc { return $null }
 
-        $result = Test-GoogleRecorderSearch
+        Rename-GoogleRecording -RecordingId 'rec-123' -NewTitle 'Test' -WhatIf
 
-        $result | Should -BeFalse
+        Should -Invoke -ModuleName GoogleRecorderClient Invoke-RecorderRpc -Times 0 -Exactly
     }
 }

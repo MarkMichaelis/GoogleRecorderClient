@@ -1,4 +1,4 @@
-function Connect-GoogleRecorder {
+﻿function Connect-GoogleRecorder {
     <#
     .SYNOPSIS
         Authenticates to Google Recorder and stores the session for subsequent commands.

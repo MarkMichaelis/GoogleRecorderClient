@@ -4,9 +4,9 @@ BeforeAll {
 }
 
 Describe 'Module structure' -Tag 'Functional' {
-    It 'exports exactly 3 commands' {
+    It 'exports exactly 11 commands' {
         $commands = Get-Command -Module GoogleRecorderClient
-        $commands.Count | Should -Be 3
+        $commands.Count | Should -Be 11
     }
 
     It 'exports Connect-GoogleRecorder' {
@@ -24,6 +24,46 @@ Describe 'Module structure' -Tag 'Functional' {
             Should -Not -BeNullOrEmpty
     }
 
+    It 'exports Get-GoogleRecorderLabel' {
+        Get-Command -Module GoogleRecorderClient -Name Get-GoogleRecorderLabel |
+            Should -Not -BeNullOrEmpty
+    }
+
+    It 'exports Get-GoogleRecordingAudioTag' {
+        Get-Command -Module GoogleRecorderClient -Name Get-GoogleRecordingAudioTag |
+            Should -Not -BeNullOrEmpty
+    }
+
+    It 'exports Get-GoogleRecordingShare' {
+        Get-Command -Module GoogleRecorderClient -Name Get-GoogleRecordingShare |
+            Should -Not -BeNullOrEmpty
+    }
+
+    It 'exports Get-GoogleRecordingTranscript' {
+        Get-Command -Module GoogleRecorderClient -Name Get-GoogleRecordingTranscript |
+            Should -Not -BeNullOrEmpty
+    }
+
+    It 'exports Get-GoogleRecordingWaveform' {
+        Get-Command -Module GoogleRecorderClient -Name Get-GoogleRecordingWaveform |
+            Should -Not -BeNullOrEmpty
+    }
+
+    It 'exports Rename-GoogleRecording' {
+        Get-Command -Module GoogleRecorderClient -Name Rename-GoogleRecording |
+            Should -Not -BeNullOrEmpty
+    }
+
+    It 'exports Save-GoogleRecordingAudio' {
+        Get-Command -Module GoogleRecorderClient -Name Save-GoogleRecordingAudio |
+            Should -Not -BeNullOrEmpty
+    }
+
+    It 'exports Test-GoogleRecorderSearch' {
+        Get-Command -Module GoogleRecorderClient -Name Test-GoogleRecorderSearch |
+            Should -Not -BeNullOrEmpty
+    }
+
     It 'does not export private functions' {
         $commands = Get-Command -Module GoogleRecorderClient
         $commands.Name | Should -Not -Contain 'Invoke-RecorderRpc'
@@ -33,12 +73,17 @@ Describe 'Module structure' -Tag 'Functional' {
         $commands.Name | Should -Not -Contain 'ConvertFrom-ProtoTimestamp'
         $commands.Name | Should -Not -Contain 'Format-RecorderDuration'
         $commands.Name | Should -Not -Contain 'Get-UnixTimestamp'
+        $commands.Name | Should -Not -Contain 'Get-SingleRecording'
+        $commands.Name | Should -Not -Contain 'Get-RecordingList'
+        $commands.Name | Should -Not -Contain 'Resolve-AudioOutputPath'
+        $commands.Name | Should -Not -Contain 'Build-AudioDownloadHeaders'
     }
 }
 
 Describe 'Unauthenticated behavior' -Tag 'Functional' {
     BeforeAll {
         InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
+        Mock -ModuleName GoogleRecorderClient Test-Path { $false }
     }
 
     It 'Get-GoogleRecording throws a helpful message when not connected' {
@@ -152,5 +197,117 @@ Describe 'Recording retrieval with mock API' -Tag 'Functional' {
 
         @($spokane).Count | Should -Be 1
         $spokane.Title | Should -Be 'Morning Standup'
+    }
+}
+
+Describe 'Unauthenticated behavior for new functions' -Tag 'Functional' {
+    BeforeAll {
+        InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
+        Mock -ModuleName GoogleRecorderClient Test-Path { $false }
+    }
+
+    It 'Get-GoogleRecorderLabel throws when not connected' {
+        { Get-GoogleRecorderLabel } | Should -Throw '*Not connected*'
+    }
+
+    It 'Get-GoogleRecordingTranscript throws when not connected' {
+        { Get-GoogleRecordingTranscript -RecordingId 'x' } | Should -Throw '*Not connected*'
+    }
+
+    It 'Get-GoogleRecordingShare throws when not connected' {
+        { Get-GoogleRecordingShare -RecordingId 'x' } | Should -Throw '*Not connected*'
+    }
+
+    It 'Get-GoogleRecordingAudioTag throws when not connected' {
+        { Get-GoogleRecordingAudioTag -RecordingId 'x' } | Should -Throw '*Not connected*'
+    }
+
+    It 'Get-GoogleRecordingWaveform throws when not connected' {
+        { Get-GoogleRecordingWaveform -RecordingId 'x' } | Should -Throw '*Not connected*'
+    }
+
+    It 'Rename-GoogleRecording throws when not connected' {
+        { Rename-GoogleRecording -RecordingId 'x' -NewTitle 'y' } | Should -Throw '*Not connected*'
+    }
+
+    It 'Save-GoogleRecordingAudio throws when not connected' {
+        { Save-GoogleRecordingAudio -RecordingId 'x' -OutputPath 'c:\temp' } | Should -Throw '*Not connected*'
+    }
+
+    It 'Test-GoogleRecorderSearch throws when not connected' {
+        { Test-GoogleRecorderSearch } | Should -Throw '*Not connected*'
+    }
+}
+
+Describe 'Rename-GoogleRecording with mock API' -Tag 'Functional' {
+    BeforeAll {
+        InModuleScope GoogleRecorderClient {
+            $script:RecorderSession = @{
+                CookieHeader = 'SID=abc; SAPISID=test/value'
+                ApiKey       = 'test-key'
+                Email        = 'func@test.com'
+                BaseUrl      = 'https://pixelrecorder-pa.clients6.google.com'
+            }
+        }
+    }
+
+    AfterAll {
+        InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
+    }
+
+    It 'calls UpdateRecordingTitle and does not throw' {
+        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc { return $null }
+
+        { Rename-GoogleRecording -RecordingId 'test-rec' -NewTitle 'Test Test Test' } |
+            Should -Not -Throw
+
+        Should -Invoke -ModuleName GoogleRecorderClient Invoke-RecorderRpc -Times 1 -Exactly
+    }
+
+    It 'supports -WhatIf to preview without calling API' {
+        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc { return $null }
+
+        Rename-GoogleRecording -RecordingId 'test-rec' -NewTitle 'Test Test Test' -WhatIf
+
+        Should -Invoke -ModuleName GoogleRecorderClient Invoke-RecorderRpc -Times 0 -Exactly
+    }
+}
+
+Describe 'Pipeline integration across functions' -Tag 'Functional' {
+    BeforeAll {
+        InModuleScope GoogleRecorderClient {
+            $script:RecorderSession = @{
+                CookieHeader = 'SID=abc; SAPISID=test/value'
+                ApiKey       = 'test-key'
+                Email        = 'func@test.com'
+                BaseUrl      = 'https://pixelrecorder-pa.clients6.google.com'
+            }
+        }
+    }
+
+    AfterAll {
+        InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
+    }
+
+    It 'Get-GoogleRecording pipes into Get-GoogleRecordingTranscript' {
+        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc {
+            param($Method)
+            if ($Method -eq 'GetRecordingList') {
+                $rec = [object[]]::new(25)
+                $rec[0] = 'uuid-1'; $rec[1] = 'Test'; $rec[13] = 'rec-pipe'
+                $rec[2] = @('1771181693', 0); $rec[3] = @('60', 0)
+                return ,@(,@($rec), 0)
+            }
+            if ($Method -eq 'GetTranscription') {
+                return ,@(,@(,@(,@(
+                    @('hi','Hi.','0','500',$null,$null,@(1,1)),
+                    @('there','there.','500','1000',$null,$null,@(1,1))
+                ))))
+            }
+        }
+
+        $result = Get-GoogleRecording -First 1 | Get-GoogleRecordingTranscript -AsText
+
+        $result | Should -BeLike '*Hi.*'
     }
 }

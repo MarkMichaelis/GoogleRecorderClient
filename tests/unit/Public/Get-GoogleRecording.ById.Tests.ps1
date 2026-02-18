@@ -11,6 +11,7 @@ Describe 'Get-GoogleRecording -RecordingId' {
 
     It 'throws when not connected' {
         InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
+        Mock -ModuleName GoogleRecorderClient Test-Path { $false }
 
         { Get-GoogleRecording -RecordingId 'some-id' } | Should -Throw '*Not connected*'
     }

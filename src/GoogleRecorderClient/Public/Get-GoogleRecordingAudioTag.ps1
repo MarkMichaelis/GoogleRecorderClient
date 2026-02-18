@@ -1,4 +1,4 @@
-function Get-GoogleRecordingAudioTag {
+﻿function Get-GoogleRecordingAudioTag {
     <#
     .SYNOPSIS
         Retrieves the speaker-activity timeline for a Google Recorder recording.
@@ -27,9 +27,8 @@ function Get-GoogleRecordingAudioTag {
         [string]$RecordingId
     )
 
-    if (-not $script:RecorderSession) {
-        throw 'Not connected to Google Recorder. Run Connect-GoogleRecorder first.'
-    }
+    process {
+    Assert-RecorderSession
 
     $body   = "[`"$RecordingId`"]"
     $result = Invoke-RecorderRpc -Method 'GetAudioTag' -Body $body
@@ -45,5 +44,6 @@ function Get-GoogleRecordingAudioTag {
             TimestampMs = [int]$tuple[1]
             Amplitude   = [double]$tuple[2]
         }
+    }
     }
 }
