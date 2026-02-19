@@ -1,6 +1,21 @@
 BeforeAll {
     $modulePath = Join-Path $PSScriptRoot '..' '..' '..' 'src' 'GoogleRecorderClient' 'GoogleRecorderClient.psd1'
     Import-Module (Resolve-Path $modulePath) -Force -ErrorAction Stop
+
+    # Preserve real credential cache so tests don't destroy it
+    $script:CachePath  = InModuleScope GoogleRecorderClient { Join-Path $script:ModuleRoot 'recorder-session.json' }
+    $script:BackupPath = "$($script:CachePath).bak"
+    if (Test-Path $script:CachePath) {
+        Copy-Item $script:CachePath $script:BackupPath -Force
+    }
+}
+
+AfterAll {
+    # Restore the real credential cache
+    if (Test-Path $script:BackupPath) {
+        Copy-Item $script:BackupPath $script:CachePath -Force
+        Remove-Item $script:BackupPath -Force -ErrorAction SilentlyContinue
+    }
 }
 
 Describe 'Disconnect-GoogleRecorder' {
