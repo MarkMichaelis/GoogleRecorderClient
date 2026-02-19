@@ -1,14 +1,28 @@
 BeforeAll {
     $modulePath = Join-Path $PSScriptRoot '..' '..' '..' 'src' 'GoogleRecorderClient' 'GoogleRecorderClient.psd1'
     Import-Module (Resolve-Path $modulePath) -Force -ErrorAction Stop
+
+    # Preserve real credential cache so tests don't destroy it
+    $script:CachePath  = InModuleScope GoogleRecorderClient { Join-Path $script:ModuleRoot 'recorder-session.json' }
+    $script:BackupPath = "$($script:CachePath).bak"
+    if (Test-Path $script:CachePath) {
+        Copy-Item $script:CachePath $script:BackupPath -Force
+    }
+}
+
+AfterAll {
+    # Restore the real credential cache
+    if (Test-Path $script:BackupPath) {
+        Copy-Item $script:BackupPath $script:CachePath -Force
+        Remove-Item $script:BackupPath -Force -ErrorAction SilentlyContinue
+    }
 }
 
 Describe 'Connect-GoogleRecorder' {
     AfterEach {
         InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
-        # Clean up any cache file created during tests
-        $cachePath = InModuleScope GoogleRecorderClient { Join-Path $script:ModuleRoot 'recorder-session.json' }
-        if (Test-Path $cachePath) { Remove-Item $cachePath -Force -ErrorAction SilentlyContinue }
+        # Clean up test-created cache file (real one will be restored in AfterAll)
+        if (Test-Path $script:CachePath) { Remove-Item $script:CachePath -Force -ErrorAction SilentlyContinue }
     }
 
     Context 'Direct parameter set' {

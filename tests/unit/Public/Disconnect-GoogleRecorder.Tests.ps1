@@ -1,6 +1,21 @@
 BeforeAll {
     $modulePath = Join-Path $PSScriptRoot '..' '..' '..' 'src' 'GoogleRecorderClient' 'GoogleRecorderClient.psd1'
     Import-Module (Resolve-Path $modulePath) -Force -ErrorAction Stop
+
+    # Preserve real credential cache so tests don't destroy it
+    $script:CachePath  = InModuleScope GoogleRecorderClient { Join-Path $script:ModuleRoot 'recorder-session.json' }
+    $script:BackupPath = "$($script:CachePath).bak"
+    if (Test-Path $script:CachePath) {
+        Copy-Item $script:CachePath $script:BackupPath -Force
+    }
+}
+
+AfterAll {
+    # Restore the real credential cache
+    if (Test-Path $script:BackupPath) {
+        Copy-Item $script:BackupPath $script:CachePath -Force
+        Remove-Item $script:BackupPath -Force -ErrorAction SilentlyContinue
+    }
 }
 
 Describe 'Disconnect-GoogleRecorder' {
@@ -22,17 +37,21 @@ Describe 'Disconnect-GoogleRecorder' {
         $session | Should -BeNullOrEmpty
     }
 
-    It 'removes cache file when -RemoveCache is specified' {
+    It 'deletes the cache file on disk' {
         $cachePath = InModuleScope GoogleRecorderClient { Join-Path $script:ModuleRoot 'recorder-session.json' }
         # Create a temp cache file
         '{}' | Set-Content -Path $cachePath -Force
 
-        Disconnect-GoogleRecorder -RemoveCache
+        Disconnect-GoogleRecorder
 
         Test-Path $cachePath | Should -BeFalse
     }
 
     It 'does not throw when cache file does not exist' {
-        { Disconnect-GoogleRecorder -RemoveCache } | Should -Not -Throw
+        # Ensure no cache file exists
+        $cachePath = InModuleScope GoogleRecorderClient { Join-Path $script:ModuleRoot 'recorder-session.json' }
+        if (Test-Path $cachePath) { Remove-Item $cachePath -Force }
+
+        { Disconnect-GoogleRecorder } | Should -Not -Throw
     }
 }
