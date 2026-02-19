@@ -1,17 +1,17 @@
 ﻿function Format-RawRecording {
     <#
     .SYNOPSIS
-        Converts a raw protobuf-JSON recording array into a friendly PSCustomObject.
+        Converts a raw protobuf-JSON recording array into a Recording object.
 
     .DESCRIPTION
         Maps positional array indices from the GetRecordingList / GetRecordingInfo
-        response to named properties.
+        response to typed Recording class properties.
 
     .PARAMETER RawRecording
         A single recording array from the API response.
     #>
     [CmdletBinding()]
-    [OutputType([PSCustomObject])]
+    [OutputType('Recording')]
     param(
         [Parameter(Mandatory)]
         [object]$RawRecording
@@ -40,16 +40,16 @@
         }
     }
 
-    [PSCustomObject]@{
-        PSTypeName  = 'GoogleRecorder.Recording'
-        RecordingId = $id
-        Title       = $title
-        Created     = $created
-        Duration    = $duration
-        Latitude    = $lat
-        Longitude   = $lon
-        Location    = $location
-        Speakers    = $speakers
-        Url         = "https://recorder.google.com/$id"
-    }
+    $recording = [Recording]::new()
+    $recording.RecordingId = $id
+    $recording.Title       = $title
+    $recording.Created     = $created
+    $recording.Duration    = $duration
+    $recording.Latitude    = if ($lat) { [double]$lat } else { 0 }
+    $recording.Longitude   = if ($lon) { [double]$lon } else { 0 }
+    $recording.Location    = $location
+    $recording.Speakers    = [string[]]$speakers
+    $recording.Url         = "https://recorder.google.com/$id"
+
+    return $recording
 }

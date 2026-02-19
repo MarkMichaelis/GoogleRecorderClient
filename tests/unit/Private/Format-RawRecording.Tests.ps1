@@ -57,14 +57,14 @@ Describe 'Format-RawRecording' {
             $result.Url | Should -Be 'https://recorder.google.com/rec-xyz'
         }
 
-        It 'sets PSTypeName to GoogleRecorder.Recording' {
+        It 'returns a Recording instance' {
             $raw = New-FakeRawRecording
             $result = InModuleScope GoogleRecorderClient -ArgumentList @(, $raw) {
                 param($r)
                 Format-RawRecording -RawRecording $r
             }
 
-            $result.PSTypeNames | Should -Contain 'GoogleRecorder.Recording'
+            $result.PSTypeNames | Should -Contain 'Recording'
         }
     }
 
