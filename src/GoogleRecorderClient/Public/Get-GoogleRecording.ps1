@@ -1,4 +1,4 @@
-function Get-GoogleRecording {
+﻿function Get-GoogleRecording {
     <#
     .SYNOPSIS
         Retrieves recordings from Google Recorder.
@@ -61,15 +61,15 @@ function Get-GoogleRecording {
         [int]$First
     )
 
-    if (-not $script:RecorderSession) {
-        throw 'Not connected to Google Recorder. Run Connect-GoogleRecorder first.'
-    }
+    process {
+    Assert-RecorderSession
 
     if ($PSCmdlet.ParameterSetName -eq 'ById') {
         return Get-SingleRecording -RecordingId $RecordingId
     }
 
     return Get-RecordingList -PageSize $PageSize -MaxPages $MaxPages -First $First
+    }
 }
 
 function Get-SingleRecording {

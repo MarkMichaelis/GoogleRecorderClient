@@ -1,4 +1,4 @@
-function Get-GoogleRecordingWaveform {
+﻿function Get-GoogleRecordingWaveform {
     <#
     .SYNOPSIS
         Retrieves waveform amplitude data for a Google Recorder recording.
@@ -29,9 +29,8 @@ function Get-GoogleRecordingWaveform {
         [string]$RecordingId
     )
 
-    if (-not $script:RecorderSession) {
-        throw 'Not connected to Google Recorder. Run Connect-GoogleRecorder first.'
-    }
+    process {
+    Assert-RecorderSession
 
     $body   = "[`"$RecordingId`"]"
     $result = Invoke-RecorderRpc -Method 'GetWaveform' -Body $body
@@ -40,5 +39,6 @@ function Get-GoogleRecordingWaveform {
         PSTypeName  = 'GoogleRecorder.Waveform'
         RecordingId = $RecordingId
         Samples     = $result[0][0]
+    }
     }
 }

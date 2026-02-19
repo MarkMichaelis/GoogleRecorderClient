@@ -34,9 +34,7 @@
     )
 
     process {
-        if (-not $script:RecorderSession) {
-            throw 'Not connected to Google Recorder. Run Connect-GoogleRecorder first.'
-        }
+        Assert-RecorderSession
 
         if ($PSCmdlet.ShouldProcess("Recording '$RecordingId'", "Rename to '$NewTitle'")) {
             $body = "[`"$RecordingId`",`"$NewTitle`"]"

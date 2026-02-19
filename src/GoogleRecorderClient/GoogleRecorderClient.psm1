@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 
 <#
 .SYNOPSIS
@@ -50,7 +50,13 @@ Update-FormatData -PrependPath (Join-Path $PSScriptRoot 'GoogleRecorderClient.Fo
 Export-ModuleMember -Function @(
     'Connect-GoogleRecorder'
     'Disconnect-GoogleRecorder'
+    'Get-GoogleRecorderLabel'
     'Get-GoogleRecording'
+    'Get-GoogleRecordingAudioTag'
+    'Get-GoogleRecordingShare'
+    'Get-GoogleRecordingTranscript'
+    'Get-GoogleRecordingWaveform'
     'Rename-GoogleRecording'
     'Save-GoogleRecordingAudio'
+    'Test-GoogleRecorderSearch'
 )

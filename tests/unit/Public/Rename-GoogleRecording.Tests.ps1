@@ -10,6 +10,7 @@ Describe 'Rename-GoogleRecording' {
 
     It 'throws when not connected' {
         InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
+        Mock -ModuleName GoogleRecorderClient Test-Path { $false }
 
         { Rename-GoogleRecording -RecordingId 'some-id' -NewTitle 'New' } |
             Should -Throw '*Not connected*'
