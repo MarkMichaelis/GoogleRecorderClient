@@ -37,17 +37,21 @@ Describe 'Disconnect-GoogleRecorder' {
         $session | Should -BeNullOrEmpty
     }
 
-    It 'removes cache file when -RemoveCache is specified' {
+    It 'deletes the cache file on disk' {
         $cachePath = InModuleScope GoogleRecorderClient { Join-Path $script:ModuleRoot 'recorder-session.json' }
         # Create a temp cache file
         '{}' | Set-Content -Path $cachePath -Force
 
-        Disconnect-GoogleRecorder -RemoveCache
+        Disconnect-GoogleRecorder
 
         Test-Path $cachePath | Should -BeFalse
     }
 
     It 'does not throw when cache file does not exist' {
-        { Disconnect-GoogleRecorder -RemoveCache } | Should -Not -Throw
+        # Ensure no cache file exists
+        $cachePath = InModuleScope GoogleRecorderClient { Join-Path $script:ModuleRoot 'recorder-session.json' }
+        if (Test-Path $cachePath) { Remove-Item $cachePath -Force }
+
+        { Disconnect-GoogleRecorder } | Should -Not -Throw
     }
 }

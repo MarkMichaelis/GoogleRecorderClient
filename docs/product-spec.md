@@ -29,12 +29,12 @@ Authenticates the user to Google Recorder and stores session data for subsequent
 
 ### 2. Session Disconnection (`Disconnect-GoogleRecorder`)
 
-Clears the in-memory session and optionally deletes the cached session file.
+Clears the in-memory session and deletes the cached session file on disk so that subsequent commands require a fresh `Connect-GoogleRecorder`.
 
 **Acceptance Criteria:**
 
-- After disconnection, API commands throw a descriptive error.
-- `-ClearCache` removes the persisted `recorder-session.json` file.
+- After disconnection, API commands throw a descriptive error (no auto-reconnect possible since cache is deleted).
+- The persisted `recorder-session.json` file is always deleted on disconnect.
 
 ### 3. Auto-Connect from Cache (`Assert-RecorderSession`)
 
