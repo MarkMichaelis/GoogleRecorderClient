@@ -103,10 +103,22 @@ Describe 'Session lifecycle' -Tag 'Functional' {
         }
     }
 
-    AfterAll {
+    BeforeEach {
+        # Backup real cache before each test that creates cache files
+        $script:CachePath  = InModuleScope GoogleRecorderClient { Join-Path $script:ModuleRoot 'recorder-session.json' }
+        $script:BackupPath = "$($script:CachePath).bak"
+        if (Test-Path $script:CachePath) {
+            Copy-Item $script:CachePath $script:BackupPath -Force
+        }
+    }
+
+    AfterEach {
         InModuleScope GoogleRecorderClient { $script:RecorderSession = $null }
-        $cachePath = InModuleScope GoogleRecorderClient { Join-Path $script:ModuleRoot 'recorder-session.json' }
-        if (Test-Path $cachePath) { Remove-Item $cachePath -Force -ErrorAction SilentlyContinue }
+        # Restore real cache after each test
+        if (Test-Path $script:BackupPath) {
+            Copy-Item $script:BackupPath $script:CachePath -Force
+            Remove-Item $script:BackupPath -Force -ErrorAction SilentlyContinue
+        }
     }
 
     It 'Connect then Disconnect clears the session' {
