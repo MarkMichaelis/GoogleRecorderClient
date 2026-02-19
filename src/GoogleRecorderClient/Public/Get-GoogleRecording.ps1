@@ -42,7 +42,7 @@
         # Filters recordings by location.
     #>
     [CmdletBinding(DefaultParameterSetName = 'List')]
-    [OutputType([PSCustomObject])]
+    [OutputType('Recording')]
     param(
         [Parameter(Mandatory, ParameterSetName = 'ById', ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
@@ -92,9 +92,9 @@ function Get-SingleRecording {
 
     $recording = Format-RawRecording -RawRecording $result[0]
 
-    # Add audio download URL if present (index 3 in the response)
+    # Set audio download URL if present (index 3 in the response)
     if ($result.Count -gt 3 -and $result[3]) {
-        $recording | Add-Member -NotePropertyName 'AudioDownloadUrl' -NotePropertyValue $result[3]
+        $recording.AudioDownloadUrl = $result[3]
     }
 
     return $recording
@@ -112,7 +112,7 @@ function Get-RecordingList {
         [int]$First
     )
 
-    $allRecordings = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $allRecordings = [System.Collections.ArrayList]::new()
     $cursor = Get-UnixTimestamp
     $page   = 0
 
@@ -131,7 +131,7 @@ function Get-RecordingList {
         $recordings = $result[0]
         foreach ($raw in $recordings) {
             $formatted = Format-RawRecording -RawRecording $raw
-            $allRecordings.Add($formatted)
+            [void]$allRecordings.Add($formatted)
 
             if ($First -and $allRecordings.Count -ge $First) {
                 break

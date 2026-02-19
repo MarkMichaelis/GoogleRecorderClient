@@ -115,6 +115,11 @@ Maintain a living product specification in `docs/product-spec.md`.
 - Sections: Overview, Features (with acceptance criteria), API Surface, UI Flows, Data Model, Known Limitations.
 - Use Conventional Commits for spec changes: `docs(spec): add <feature> specification` or `docs(spec): update <feature> specification`.
 
+## Tool Preferences
+
+- **Prefer Git CLI over GitKraken MCP tools.** Use standard `git` commands in the terminal for common operations (add, commit, push, pull, log, diff, status, branch, checkout, etc.).
+- **GitKraken MCP tools are acceptable** when they provide functionality not easily available via the Git CLI (e.g., GitKraken workspace listing, GitLens-specific features like launchpad, start-work, or commit composer).
+
 ## Branching Strategy
 
 - **Never commit directly to `main`.** Always create a feature branch first.

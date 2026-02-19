@@ -26,6 +26,9 @@ public/app.js
 *-cookies.json
 scripts/*.log
 
+# Git worktrees (inside repo root)
+.worktrees/
+
 # .NET build outputs
 bin/
 obj/

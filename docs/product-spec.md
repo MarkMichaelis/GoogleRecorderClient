@@ -61,7 +61,7 @@ Retrieves the authenticated user's recordings with metadata.
 
 **Acceptance Criteria:**
 
-- Returns `GoogleRecorder.Recording` objects with: RecordingId, Title, Created, Duration, Location, Latitude, Longitude, Speakers, Url.
+- Returns `Recording` objects with: RecordingId, Title, Created, Duration, Location, Latitude, Longitude, Speakers, Url.
 - Pagination is automatic cursor-based using the last recording's timestamp.
 - Named speakers are extracted (e.g., "Elisabeth", "Mark"); unnamed speakers show as "Speaker N".
 - Default table view shows Created, Duration, Title.
@@ -80,7 +80,7 @@ Retrieves a single recording's detailed information via the `GetRecordingInfo` R
 **Acceptance Criteria:**
 
 - Calls `GetRecordingInfo` with the recording ID.
-- Returns a `GoogleRecorder.Recording` object with an `AudioDownloadUrl` property.
+- Returns a `Recording` object with an `AudioDownloadUrl` property.
 - Throws when the recording is not found.
 - Accepts `RecordingId` from pipeline (e.g., `Get-GoogleRecording -First 1 | Get-GoogleRecording`).
 
@@ -231,11 +231,12 @@ Tests whether the user's recording library has been indexed for global search vi
 
 ### Output Types
 
-**`GoogleRecorder.Recording`** — custom PSObject with:
+**`Recording`** — strongly-typed PowerShell class with:
 
 | Property | Type | Description |
 |---|---|---|
 | RecordingId | string | UUID for API calls and URLs |
+| Id | *(alias)* | Alias for RecordingId (registered via `Update-TypeData`) |
 | Title | string | Recording title |
 | Created | DateTime | Local creation timestamp |
 | Duration | string | Formatted as mm:ss or hh:mm:ss |
@@ -301,7 +302,7 @@ Assert-RecorderSession (called by all public functions)
 Get-GoogleRecording [-RecordingId]
   └─ List mode → Get-RecordingList → GetRecordingList RPC (paginated)
   └─ ById mode → Get-SingleRecording → GetRecordingInfo RPC
-  └─ Both → Format-RawRecording → GoogleRecorder.Recording objects
+  └─ Both → Format-RawRecording → Recording objects
 
 Get-GoogleRecordingTranscript     → GetTranscription RPC
 Get-GoogleRecorderLabel           → ListLabels RPC

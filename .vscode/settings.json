@@ -35,6 +35,9 @@
         "Invoke-ScriptAnalyzer": true,
         "Push-Location": true,
         ".\\scripts\\Invoke-Tests.ps1": true,
-        "Resolve-Path": true
+        "Resolve-Path": true,
+        "Rename-Item": true,
+        "New-Item": true,
+        "Out-Null": true
     }
 }
