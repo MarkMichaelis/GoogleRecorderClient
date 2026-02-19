@@ -10,6 +10,8 @@ playwright-report/
 *.har
 *-cookies.json
 *-credential.xml
+recorder-session.json
+recorder-session.json.bak
 
 # Allow config files and public builds
 !vitest.config.ts
