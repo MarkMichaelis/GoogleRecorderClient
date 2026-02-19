@@ -23,6 +23,21 @@ $script:ModuleRoot = $PSScriptRoot
 #   Keys: CookieHeader, ApiKey, Email, BaseUrl
 $script:RecorderSession = $null
 
+# ─── Dot-source class definitions ────────────────────────────────────────────
+
+# Classes must be loaded before any functions that reference them.
+$classPath = Join-Path $PSScriptRoot 'Classes'
+if (Test-Path $classPath) {
+    Get-ChildItem -Path $classPath -Filter '*.ps1' -Recurse | ForEach-Object {
+        . $_.FullName
+    }
+}
+
+# Register Id as an alias for RecordingId on Recording
+Update-TypeData -TypeName 'Recording' `
+    -MemberType AliasProperty -MemberName 'Id' -Value 'RecordingId' `
+    -Force -ErrorAction SilentlyContinue
+
 # ─── Dot-source function files ───────────────────────────────────────────────
 
 # Private helpers (not exported)
