@@ -23,3 +23,7 @@ public/app.js
 *-credential.xml
 *-cookies.json
 scripts/*.log
+
+# .NET build outputs
+bin/
+obj/
