@@ -214,22 +214,45 @@ Errors are actionable: "FFmpeg not found. Install with: winget install ffmpeg".
 | `tests/python/test_voiceprint_embed.py` | Embedding extraction with synthetic WAV; output shape (256-d); min-duration threshold returns null |
 | `tests/python/test_voiceprint_compare.py` | Cosine similarity; identical embeddings → 1.0; orthogonal → ~0.0; output JSON format |
 
-### Functional Test (Pester)
+### Functional Test (Pester) — Real Audio, No Mocks
 
 `tests/functional/Voiceprint.Tests.ps1`:
+
+These tests use **real recordings** with **real audio processing** — the Python
+embedding pipeline, ffmpeg extraction, and cosine similarity are all exercised
+for real. Nothing in the audio/matching path is mocked.
+
+**Isolation guarantees:**
+- Voiceprint database is written to a temp directory (`$TestDrive` or
+  `[System.IO.Path]::GetTempPath()`), never to the user's real
+  `~/.google-recorder/voiceprints.json`.
+- No speaker renames are performed — `Update-GoogleRecordingSpeaker` is NOT
+  called; the test only verifies `Find-GoogleRecordingSpeaker` output.
+- All temp audio files are cleaned up after each test.
 
 **Cross-recording speaker identification:**
 - Recording A has "Elisabeth" (named) and "Speaker 2" (unnamed).
 - Recording B has "Speaker 1" (unnamed) and "Speaker 2" (unnamed).
 - Elisabeth in A is the same person as Speaker 1 in B.
-- Register voiceprints from Recording A → only "Elisabeth" is registered.
-- Find matches in Recording B → Speaker 1 matched to "Elisabeth" with confidence > 0.75.
+- Register voiceprints from Recording A (to temp DB) → only "Elisabeth" registered.
+- Find matches in Recording B (using temp DB) → Speaker 1 matched to
+  "Elisabeth" with confidence > 0.75.
+- Verify the temp voiceprint DB contains only "Elisabeth", not "Speaker 2".
 
 **Unnamed speaker detection:**
-- Verify recordings with all-unnamed speakers produce no registrations from `Register-*`.
-- Verify `Find-*` correctly identifies which speakers need matching.
+- Verify recordings with all-unnamed speakers produce no registrations
+  from `Register-*` (all speakers are "Speaker X" → nothing to register).
+- Verify `Find-*` correctly identifies which speakers need matching (only
+  unnamed speakers are candidates).
 
-Requires Python + ffmpeg installed. Tagged to run only when dependencies are available.
+**No-match scenario:**
+- Register voiceprints from Recording A.
+- Run `Find-*` on a recording where none of the unnamed speakers match
+  any known voiceprint.
+- Verify empty / below-threshold results.
+
+Requires Python + ffmpeg + resemblyzer installed. Tagged so it only runs
+when dependencies are available (skip with clear message otherwise).
 
 ## Implementation Tasks
 
