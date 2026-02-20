@@ -37,9 +37,21 @@
         Get-GoogleRecording -First 5
         # Lists the 5 most recent recordings.
 
+    .PARAMETER Title
+        A title or wildcard pattern to match recordings by name.
+        Supports * and ? wildcards. Alias: Name.
+
     .EXAMPLE
         Get-GoogleRecording | Where-Object Location -like '*Spokane*'
         # Filters recordings by location.
+
+    .EXAMPLE
+        Get-GoogleRecording 'My Meeting'
+        # Retrieves recordings matching the title 'My Meeting'.
+
+    .EXAMPLE
+        Get-GoogleRecording -Name 'Standup*'
+        # Retrieves all recordings with titles matching 'Standup*'.
     #>
     [CmdletBinding(DefaultParameterSetName = 'List')]
     [OutputType('Recording')]
@@ -47,6 +59,12 @@
         [Parameter(Mandatory, ParameterSetName = 'ById', ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
         [string]$RecordingId,
+
+        [Parameter(Mandatory, ParameterSetName = 'ByTitle', Position = 0)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Name')]
+        [SupportsWildcards()]
+        [string]$Title,
 
         [Parameter(ParameterSetName = 'List')]
         [ValidateRange(1, 100)]
@@ -66,6 +84,10 @@
 
     if ($PSCmdlet.ParameterSetName -eq 'ById') {
         return Get-SingleRecording -RecordingId $RecordingId
+    }
+
+    if ($PSCmdlet.ParameterSetName -eq 'ByTitle') {
+        return Resolve-RecordingByTitle -Title $Title
     }
 
     return Get-RecordingList -PageSize $PageSize -MaxPages $MaxPages -First $First

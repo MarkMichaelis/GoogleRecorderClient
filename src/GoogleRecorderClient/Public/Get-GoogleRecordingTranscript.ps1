@@ -13,8 +13,18 @@
     .PARAMETER RecordingId
         The UUID of the recording to get the transcript for.
 
+    .PARAMETER Title
+        A title or wildcard pattern to resolve recordings by name. Alias: Name.
+
     .PARAMETER AsText
         Return the transcript as a single plain text string instead of word objects.
+
+    .PARAMETER OutputPath
+        File path or directory to save the transcript. If a directory, the
+        filename defaults to "{RecordingId}.txt". Implies -AsText.
+
+    .PARAMETER Force
+        Overwrite the output file if it already exists.
 
     .EXAMPLE
         Get-GoogleRecordingTranscript -RecordingId 'de3d94a9-...'
@@ -27,19 +37,59 @@
     .EXAMPLE
         Get-GoogleRecording -First 1 | Get-GoogleRecordingTranscript -AsText
         # Pipes a recording to get its transcript as text.
+
+    .EXAMPLE
+        Get-GoogleRecordingTranscript 'My Meeting' -AsText
+
+    .EXAMPLE
+        Get-GoogleRecordingTranscript -RecordingId 'de3d94a9-...' -OutputPath './transcripts/'
+        # Saves the transcript to a text file.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'ById')]
     [OutputType([PSCustomObject], [string])]
     param(
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ParameterSetName = 'ById', ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ParameterSetName = 'ByIdSave', ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
         [string]$RecordingId,
 
-        [switch]$AsText
+        [Parameter(Mandatory, ParameterSetName = 'ByTitle', Position = 0)]
+        [Parameter(Mandatory, ParameterSetName = 'ByTitleSave', Position = 0)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Name')]
+        [SupportsWildcards()]
+        [string]$Title,
+
+        [Parameter(ParameterSetName = 'ById')]
+        [Parameter(ParameterSetName = 'ByTitle')]
+        [switch]$AsText,
+
+        [Parameter(Mandatory, ParameterSetName = 'ByIdSave')]
+        [Parameter(Mandatory, ParameterSetName = 'ByTitleSave')]
+        [ValidateNotNullOrEmpty()]
+        [string]$OutputPath,
+
+        [Parameter(ParameterSetName = 'ByIdSave')]
+        [Parameter(ParameterSetName = 'ByTitleSave')]
+        [switch]$Force
     )
 
     process {
     Assert-RecorderSession
+
+    if ($PSCmdlet.ParameterSetName -in 'ByTitle', 'ByTitleSave') {
+        $resolved = Resolve-RecordingByTitle -Title $Title
+        foreach ($rec in $resolved) {
+            $params = @{ RecordingId = $rec.RecordingId }
+            if ($OutputPath) {
+                $params['OutputPath'] = $OutputPath
+                if ($Force) { $params['Force'] = $true }
+            }
+            elseif ($AsText) { $params['AsText'] = $true }
+            Get-GoogleRecordingTranscript @params
+        }
+        return
+    }
 
     $body   = "[`"$RecordingId`"]"
     $result = Invoke-RecorderRpc -Method 'GetTranscription' -Body $body
@@ -67,6 +117,16 @@
         }
     }
 
+    if ($OutputPath) {
+        $text        = ($words | ForEach-Object { $_.Word }) -join ' '
+        $resolvedOut = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($OutputPath)
+        $filePath    = Resolve-OutputFilePath -OutputPath $resolvedOut -BaseName $RecordingId -Extension '.txt' -Force:$Force
+        if ($PSCmdlet.ShouldProcess($filePath, 'Save transcript')) {
+            Set-Content -Path $filePath -Value $text -Encoding utf8
+        }
+        return
+    }
+
     if ($AsText) {
         return ($words | ForEach-Object { $_.Word }) -join ' '
     }
@@ -74,3 +134,5 @@
     return $words
     }
 }
+
+
