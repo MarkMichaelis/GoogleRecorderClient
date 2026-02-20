@@ -66,51 +66,25 @@ function Set-GoogleRecordingSpeaker {
         }
 
         foreach ($rec in $recordings) {
-            $targetId    = $rec.RecordingId
-            $targetTitle = $rec.Title
+            $targetId = $rec.RecordingId
 
             if (-not $PSCmdlet.ShouldProcess("Recording '$targetId'", 'Switch speaker assignment')) {
                 continue
             }
 
-            $sessionId = $null
-            try {
-                $openBody   = "[`"$targetId`"]"
-                $openResult = Invoke-EditingRpc -Method 'OpenSession' -Body $openBody
-                if ($openResult -is [string]) {
-                    $sessionId = $openResult
-                }
-                elseif ($openResult -is [System.Collections.IEnumerable]) {
-                    $sessionId = ($openResult | Select-Object -First 1)
-                }
-
-                if (-not $sessionId) {
-                    throw "Failed to open editing session for recording '$targetId'."
-                }
-
-                $segmentList = ($SegmentIndex -join ',')
-                if ($PSCmdlet.ParameterSetName -like '*Existing') {
-                    $targetPayload = "[[${TargetSpeakerId}]]"
-                }
-                else {
-                    $targetPayload = "[`"$TargetSpeakerName`"]"
-                }
-
-                $switchBody = "[`"$($sessionId)`",[$segmentList],$targetPayload]"
-                $switchResult = Invoke-EditingRpc -Method 'SwitchSpeaker' -Body $switchBody
-
-                $saveBody = "[`"$($sessionId)`",[[[`"$targetTitle`"]],[`"$targetId`"]]]"
-                $null = Invoke-EditingRpc -Method 'SaveAudio' -Body $saveBody
-
-                if ($null -ne $switchResult) {
-                    $switchResult
-                }
+            $segmentList = ($SegmentIndex -join ',')
+            if ($PSCmdlet.ParameterSetName -like '*Existing') {
+                $targetPayload = "[[${TargetSpeakerId}]]"
             }
-            finally {
-                if ($sessionId) {
-                    $closeBody = "[`"$($sessionId)`"]"
-                    $null = Invoke-EditingRpc -Method 'CloseSession' -Body $closeBody
-                }
+            else {
+                $targetPayload = "[`"$TargetSpeakerName`"]"
+            }
+
+            Invoke-EditingSessionAction -RecordingId $targetId -Action {
+                param($SessionId)
+
+                $switchBody = "[`"$SessionId`",[$segmentList],$targetPayload]"
+                Invoke-EditingRpc -Method 'SwitchSpeaker' -Body $switchBody
             }
         }
     }

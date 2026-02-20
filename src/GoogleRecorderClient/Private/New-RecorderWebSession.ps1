@@ -18,7 +18,8 @@ function New-RecorderWebSession {
     .OUTPUTS
         [Microsoft.PowerShell.Commands.WebRequestSession]
     #>
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessage('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Creates only an in-memory WebRequestSession; no external state change.')]
+    [CmdletBinding(SupportsShouldProcess)]
     [OutputType([Microsoft.PowerShell.Commands.WebRequestSession])]
     param(
         [Parameter(Mandatory)]
@@ -26,6 +27,10 @@ function New-RecorderWebSession {
 
         [string]$Domain = '.google.com'
     )
+
+    if (-not $PSCmdlet.ShouldProcess("$Domain", 'Create WebRequestSession from cookie header')) {
+        return
+    }
 
     $container = [System.Net.CookieContainer]::new()
 

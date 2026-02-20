@@ -66,6 +66,13 @@ Describe 'Rename-GoogleRecordingSpeaker' {
                 [pscustomobject]@{ RecordingId = 'rec-2'; Title = 'Two' }
             )
         }
+        Mock -ModuleName GoogleRecorderClient Get-GoogleRecording {
+            param($RecordingId)
+            switch ($RecordingId) {
+                'rec-1' { return [pscustomobject]@{ RecordingId = 'rec-1'; Title = 'One' } }
+                'rec-2' { return [pscustomobject]@{ RecordingId = 'rec-2'; Title = 'Two' } }
+            }
+        }
 
         $script:Calls = @()
         $sessionQueue = [System.Collections.Generic.Queue[string]]::new()
