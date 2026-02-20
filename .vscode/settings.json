@@ -40,6 +40,7 @@
         "New-Item": true,
         "Out-Null": true,
         "InModuleScope": true,
-        "ConvertTo-Json": true
+        "ConvertTo-Json": true,
+        "gh": true
     }
 }
