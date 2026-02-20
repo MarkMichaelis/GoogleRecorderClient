@@ -27,11 +27,17 @@
     .EXAMPLE
         Get-GoogleRecording -First 1 | Save-GoogleRecordingAudio -OutputPath './downloads/'
     #>
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ById')]
     param(
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ParameterSetName = 'ById', ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
         [string]$RecordingId,
+
+        [Parameter(Mandatory, ParameterSetName = 'ByTitle', Position = 0)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Name')]
+        [SupportsWildcards()]
+        [string]$Title,
 
         [Parameter(Mandatory)]
         [string]$OutputPath
@@ -39,6 +45,14 @@
 
     process {
         Assert-RecorderSession
+
+        if ($PSCmdlet.ParameterSetName -eq 'ByTitle') {
+            $resolved = Resolve-RecordingByTitle -Title $Title
+            foreach ($rec in $resolved) {
+                Save-GoogleRecordingAudio -RecordingId $rec.RecordingId -OutputPath $OutputPath
+            }
+            return
+        }
 
         $session  = $script:RecorderSession
         $filePath = Resolve-AudioOutputPath -OutputPath $OutputPath -RecordingId $RecordingId

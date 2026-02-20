@@ -114,6 +114,15 @@ Maintain a living product specification in `docs/product-spec.md`.
   Examples: `Opus.4.6/feat/audio-playback`, `Opus.4.6/fix/transcript-encoding`.
 - All work happens on the feature branch. Merge to `main` only via pull request after the dev loop passes.
 
+## Worktree Convention
+
+- Create worktrees **inside the repo** under `.worktrees/` so they remain within the VS Code workspace trust boundary.
+  ```powershell
+  git worktree add .worktrees/<name> <branch>
+  ```
+- The `.worktrees/` directory is listed in `.gitignore` and should never be committed.
+- Gitignored files (e.g., `*.ps1xml`, `recorder-session.json`) must be copied manually into new worktrees since git does not track them.
+
 ## Commit Messages
 
 Follow Conventional Commits: `type(scope): description`

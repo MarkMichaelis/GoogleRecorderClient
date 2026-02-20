@@ -51,6 +51,14 @@ All public functions that require authentication automatically attempt to restor
 
 Retrieves the authenticated user's recordings with metadata.
 
+**Parameter Sets:**
+
+| Set | Parameters | Description |
+|---|---|---|
+| `List` *(default)* | `-PageSize`, `-MaxPages`, `-First` | Paginated list of all recordings. |
+| `ById` | `-RecordingId` | Single recording by UUID. |
+| `ByTitle` | `-Title` (positional, alias: `-Name`) | Filter recordings by title with wildcard support. |
+
 **Parameters:**
 
 | Parameter | Default | Description |
@@ -58,6 +66,7 @@ Retrieves the authenticated user's recordings with metadata.
 | `-PageSize` | 10 | Number of recordings per API page (1–100). |
 | `-MaxPages` | 100 | Maximum pages to retrieve. |
 | `-First` | *(all)* | Stop after N recordings. |
+| `-Title` | | Title or wildcard pattern to match (Position 0, Alias: `Name`). |
 
 **Acceptance Criteria:**
 
@@ -66,6 +75,10 @@ Retrieves the authenticated user's recordings with metadata.
 - Named speakers are extracted (e.g., "Elisabeth", "Mark"); unnamed speakers show as "Speaker N".
 - Default table view shows Created, Duration, Title.
 - Requires an active session; auto-connects from cache if needed.
+- `Get-GoogleRecording 'My Meeting'` resolves recordings by title (positional).
+- `Get-GoogleRecording -Name 'Standup*'` uses the `Name` alias for the `Title` parameter.
+- Wildcard patterns `*` and `?` are supported for title matching.
+- Throws when no recordings match the given title pattern.
 
 ### 5. Get Recording by ID (`Get-GoogleRecording -RecordingId`)
 
@@ -93,6 +106,7 @@ Retrieves word-level transcripts for a recording via the `GetTranscription` RPC.
 | Parameter | Description |
 |---|---|
 | `-RecordingId` | UUID of the recording. Accepts pipeline input by property name. |
+| `-Title` | Title or wildcard pattern to resolve recordings (Position 0, Alias: `Name`). |
 | `-AsText` | Return the transcript as a single plain text string instead of word objects. |
 
 **Acceptance Criteria:**
@@ -101,6 +115,7 @@ Retrieves word-level transcripts for a recording via the `GetTranscription` RPC.
 - With `-AsText`, returns a space-joined string of all words.
 - Writes a warning when no transcript is found.
 - Supports pipeline: `Get-GoogleRecording -First 1 | Get-GoogleRecordingTranscript -AsText`.
+- Supports title lookup: `Get-GoogleRecordingTranscript 'My Meeting'`.
 
 ### 7. List Labels (`Get-GoogleRecorderLabel`)
 
@@ -120,11 +135,13 @@ Retrieves the sharing status for a recording via the `GetShareList` RPC.
 | Parameter | Description |
 |---|---|
 | `-RecordingId` | UUID of the recording. Accepts pipeline input by property name. |
+| `-Title` | Title or wildcard pattern to resolve recordings (Position 0, Alias: `Name`). |
 
 **Acceptance Criteria:**
 
 - Returns `GoogleRecorder.Share` objects with share details.
 - Returns empty output when no shares exist.
+- Supports title lookup: `Get-GoogleRecordingShare 'My Meeting'`.
 
 ### 9. Get Audio Tags (`Get-GoogleRecordingAudioTag`)
 
@@ -135,11 +152,13 @@ Retrieves audio tag/speaker timeline data for a recording via the `GetAudioTag` 
 | Parameter | Description |
 |---|---|
 | `-RecordingId` | UUID of the recording. Accepts pipeline input by property name. |
+| `-Title` | Title or wildcard pattern to resolve recordings (Position 0, Alias: `Name`). |
 
 **Acceptance Criteria:**
 
 - Returns `GoogleRecorder.AudioTag` objects with SpeakerId, TimestampMs, and Amplitude.
 - Returns empty output when no tags exist.
+- Supports title lookup: `Get-GoogleRecordingAudioTag 'My Meeting'`.
 
 ### 10. Get Waveform (`Get-GoogleRecordingWaveform`)
 
@@ -150,10 +169,12 @@ Retrieves waveform amplitude data for a recording via the `GetWaveform` RPC.
 | Parameter | Description |
 |---|---|
 | `-RecordingId` | UUID of the recording. Accepts pipeline input by property name. |
+| `-Title` | Title or wildcard pattern to resolve recordings (Position 0, Alias: `Name`). |
 
 **Acceptance Criteria:**
 
 - Returns a `GoogleRecorder.Waveform` object with RecordingId and Samples (float array).
+- Supports title lookup: `Get-GoogleRecordingWaveform 'My Meeting'`.
 
 ### 11. Rename Recording (`Rename-GoogleRecording`)
 
@@ -164,6 +185,7 @@ Renames a recording's title via the `UpdateRecordingTitle` RPC.
 | Parameter | Description |
 |---|---|
 | `-RecordingId` | UUID of the recording. Accepts pipeline input by property name. |
+| `-Title` | Title or wildcard pattern to resolve recordings (Position 0, Alias: `Name`). |
 | `-NewTitle` | The new title string. |
 
 **Acceptance Criteria:**
@@ -171,6 +193,7 @@ Renames a recording's title via the `UpdateRecordingTitle` RPC.
 - Calls `UpdateRecordingTitle` with the recording ID and new title.
 - Supports `-WhatIf` and `-Confirm` via `SupportsShouldProcess`.
 - Validates that `NewTitle` is not null or empty.
+- Supports title lookup: `Rename-GoogleRecording 'Old Title' -NewTitle 'New Title'`.
 
 ### 12. Save Audio (`Save-GoogleRecordingAudio`)
 
@@ -181,6 +204,7 @@ Downloads the audio file for a recording via direct HTTP download.
 | Parameter | Description |
 |---|---|
 | `-RecordingId` | UUID of the recording. Accepts pipeline input by property name. |
+| `-Title` | Title or wildcard pattern to resolve recordings (Position 0, Alias: `Name`). |
 | `-OutputPath` | Path to save the audio file. If a directory, auto-generates the filename. |
 
 **Acceptance Criteria:**
@@ -188,6 +212,7 @@ Downloads the audio file for a recording via direct HTTP download.
 - Downloads from `https://usercontent.recorder.google.com/download/playback/{id}`.
 - Uses session cookies and SAPISIDHASH authorization.
 - Auto-generates filename as `{RecordingId}.m4a` when only a directory is given.
+- Supports title lookup: `Save-GoogleRecordingAudio 'My Meeting' -OutputPath ./`.
 
 ### 13. Test Search Readiness (`Test-GoogleRecorderSearch`)
 
@@ -228,6 +253,7 @@ Tests whether the user's recording library has been indexed for global search vi
 | `Format-RecorderDuration` | Formats seconds as mm:ss or hh:mm:ss. |
 | `Format-RawRecording` | Maps raw API arrays to Recording objects. |
 | `Get-UnixTimestamp` | Gets current Unix timestamp with nanoseconds. |
+| `Resolve-RecordingByTitle` | Resolves recordings by title with wildcard matching. |
 
 ### Output Types
 
@@ -299,10 +325,17 @@ Assert-RecorderSession (called by all public functions)
   └─ If cache file exists → Connect-GoogleRecorder (silent restore)
   └─ Otherwise → throw "Not connected"
 
-Get-GoogleRecording [-RecordingId]
+Get-GoogleRecording [-RecordingId | -Title | <default list>]
   └─ List mode → Get-RecordingList → GetRecordingList RPC (paginated)
   └─ ById mode → Get-SingleRecording → GetRecordingInfo RPC
-  └─ Both → Format-RawRecording → Recording objects
+  └─ ByTitle mode → Resolve-RecordingByTitle → filters list by -like
+  └─ All modes → Format-RawRecording → Recording objects
+
+Title-based lookup (all cmdlets with -Title / -Name parameter):
+  └─ Resolve-RecordingByTitle (private)
+       ├─ Fetches all recordings via Get-GoogleRecording
+       ├─ Filters with -like (supports * and ? wildcards)
+       └─ Throws if no match found
 
 Get-GoogleRecordingTranscript     → GetTranscription RPC
 Get-GoogleRecorderLabel           → ListLabels RPC

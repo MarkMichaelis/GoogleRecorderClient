@@ -22,11 +22,17 @@
         Get-GoogleRecording -First 1 | Rename-GoogleRecording -NewTitle 'Updated Title'
         # Pipes a recording object and renames it.
     #>
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium', DefaultParameterSetName = 'ById')]
     param(
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ParameterSetName = 'ById', ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
         [string]$RecordingId,
+
+        [Parameter(Mandatory, ParameterSetName = 'ByTitle', Position = 0)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Name')]
+        [SupportsWildcards()]
+        [string]$Title,
 
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
@@ -35,6 +41,14 @@
 
     process {
         Assert-RecorderSession
+
+        if ($PSCmdlet.ParameterSetName -eq 'ByTitle') {
+            $resolved = Resolve-RecordingByTitle -Title $Title
+            foreach ($rec in $resolved) {
+                Rename-GoogleRecording -RecordingId $rec.RecordingId -NewTitle $NewTitle
+            }
+            return
+        }
 
         if ($PSCmdlet.ShouldProcess("Recording '$RecordingId'", "Rename to '$NewTitle'")) {
             $body = "[`"$RecordingId`",`"$NewTitle`"]"

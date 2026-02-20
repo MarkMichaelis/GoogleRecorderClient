@@ -19,16 +19,30 @@
     .EXAMPLE
         Get-GoogleRecording -First 1 | Get-GoogleRecordingAudioTag
     #>
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ById')]
     [OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ParameterSetName = 'ById', ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
-        [string]$RecordingId
+        [string]$RecordingId,
+
+        [Parameter(Mandatory, ParameterSetName = 'ByTitle', Position = 0)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Name')]
+        [SupportsWildcards()]
+        [string]$Title
     )
 
     process {
     Assert-RecorderSession
+
+    if ($PSCmdlet.ParameterSetName -eq 'ByTitle') {
+        $resolved = Resolve-RecordingByTitle -Title $Title
+        foreach ($rec in $resolved) {
+            Get-GoogleRecordingAudioTag -RecordingId $rec.RecordingId
+        }
+        return
+    }
 
     $body   = "[`"$RecordingId`"]"
     $result = Invoke-RecorderRpc -Method 'GetAudioTag' -Body $body

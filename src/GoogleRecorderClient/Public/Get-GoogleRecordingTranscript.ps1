@@ -28,18 +28,33 @@
         Get-GoogleRecording -First 1 | Get-GoogleRecordingTranscript -AsText
         # Pipes a recording to get its transcript as text.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ById')]
     [OutputType([PSCustomObject], [string])]
     param(
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ParameterSetName = 'ById', ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
         [string]$RecordingId,
+
+        [Parameter(Mandatory, ParameterSetName = 'ByTitle', Position = 0)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Name')]
+        [SupportsWildcards()]
+        [string]$Title,
 
         [switch]$AsText
     )
 
     process {
     Assert-RecorderSession
+
+    if ($PSCmdlet.ParameterSetName -eq 'ByTitle') {
+        $resolved = Resolve-RecordingByTitle -Title $Title
+        foreach ($rec in $resolved) {
+            $PSBoundParameters.Remove('Title') | Out-Null
+            Get-GoogleRecordingTranscript -RecordingId $rec.RecordingId -AsText:$AsText
+        }
+        return
+    }
 
     $body   = "[`"$RecordingId`"]"
     $result = Invoke-RecorderRpc -Method 'GetTranscription' -Body $body
