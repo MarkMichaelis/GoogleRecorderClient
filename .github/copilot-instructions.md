@@ -126,6 +126,7 @@ Maintain a living product specification in `docs/product-spec.md`.
 - Branch naming: `<agent-name>/<type>/<short-description>` — prefix with the agent/model name.
   Examples: `Opus.4.6/feat/audio-playback`, `Opus.4.6/fix/transcript-encoding`.
 - All work happens on the feature branch. Merge to `main` only via pull request after the dev loop passes.
+- **Git worktrees must be placed in the `.worktrees/` subdirectory** of the repo root (e.g., `git worktree add .worktrees/<name> <branch>`). This directory is already in `.gitignore`.
 
 ## Commit Messages
 
