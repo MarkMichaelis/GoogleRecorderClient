@@ -96,6 +96,14 @@ If the language is not listed, infer conventions from the project's existing cod
   npx playwright test
   ```
 
+## Test Data — Live API
+
+A recording named **"Test Test Test"** exists in the connected Google Recorder account and is reserved for testing.
+
+- **Use only this recording** for any integration or functional test that touches the live API (rename, download, metadata changes, etc.).
+- **Do not modify, delete, or rename any other recording** during testing.
+- **Restore original state** after each test — e.g., if you rename the recording, rename it back to "Test Test Test" when done.
+
 ## Product Specification
 
 Maintain a living product specification in `docs/product-spec.md`.

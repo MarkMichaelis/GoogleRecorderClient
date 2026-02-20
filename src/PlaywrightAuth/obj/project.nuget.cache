@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "HgcgUa2Uu0Q=",
+  "success": true,
+  "projectFilePath": "C:\\Git\\GoogleRecorderClient\\src\\PlaywrightAuth\\PlaywrightAuth.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\MarkMichaelis\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\6.0.0\\microsoft.bcl.asyncinterfaces.6.0.0.nupkg.sha512",
+    "C:\\Users\\MarkMichaelis\\.nuget\\packages\\microsoft.playwright\\1.58.0\\microsoft.playwright.1.58.0.nupkg.sha512",
+    "C:\\Users\\MarkMichaelis\\.nuget\\packages\\system.componentmodel.annotations\\5.0.0\\system.componentmodel.annotations.5.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
