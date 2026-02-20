@@ -29,7 +29,7 @@ Before calling any data API, the web app fetches runtime configuration.
 | Field | Purpose |
 |---|---|
 | `apiKey` | Sent as `x-goog-api-key` header on every RPC call |
-| `firstPartyApiUrl` | Base URL for all PlaybackService RPCs |
+| `firstPartyApiUrl` | Base URL for all PlaybackService and EditingService RPCs |
 | `fileDownloadUrl` | Base URL for raw audio file downloads |
 
 ---
@@ -74,9 +74,14 @@ These are set when the user logs in at `accounts.google.com` and are sent automa
 
 **Base URL:** `https://pixelrecorder-pa.clients6.google.com`
 
-**RPC pattern:**
+**PlaybackService RPC pattern:**
 ```
 POST /$rpc/java.com.google.wireless.android.pixel.recorder.protos.PlaybackService/{MethodName}
+```
+
+**EditingService RPC pattern:**
+```
+POST /$rpc/java.com.google.wireless.android.pixel.recorder.sharedclient.audioediting.protos.EditingService/{MethodName}
 ```
 
 **Response format:** `application/json+protobuf; charset=UTF-8`
@@ -390,11 +395,237 @@ Checks whether global search across all recordings is available for the user.
 
 ---
 
-### 4.9 Monitoring / Analytics
+### 4.9 UpdateRecordingTitle
+
+Renames a recording by setting a new title.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../PlaybackService/UpdateRecordingTitle` |
+
+#### Request Body
+
+```json
+["recording_id_uuid", "New Title"]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | Recording ID (index `[13]` from recording array) |
+| `[1]` | `string` | New title |
+
+#### Response Body
+
+Empty on success. Throws gRPC error on failure.
+
+---
+
+### 4.10 UpdateRecordingLabels
+
+Adds or removes labels (e.g. "favorite") on a recording.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../PlaybackService/UpdateRecordingLabels` |
+
+#### Request Body
+
+```json
+["recording_id_uuid", {label_map}]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | Recording ID |
+| `[1]` | `map` | Label key → value map. Observed keys: `"favorite"`. Values: `1` = add label, `2` = remove label. |
+
+#### Response Body
+
+```json
+[null, [active_labels], [[label_id, label_display_name], ...]]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[1]` | `array` | Set of currently-active label IDs on the recording |
+| `[2]` | `array` | Full label list (same structure as ListLabels response) |
+
+---
+
+### 4.11 DeleteRecordingList
+
+Deletes one or more recordings.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../PlaybackService/DeleteRecordingList` |
+
+#### Request Body
+
+```json
+[["recording_id_uuid_1", "recording_id_uuid_2", ...]]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `array<string>` | Array of Recording IDs to delete |
+
+#### Response Body
+
+```json
+[status]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `int` | `1` = success |
+
+---
+
+### 4.12 Search
+
+Performs a global search across all recordings by keyword.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../PlaybackService/Search` |
+
+#### Request Body
+
+```json
+["search_query", null, null, null, 10]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | Search query text |
+| `[4]` | `int` | Page size (observed: `10`) |
+
+Additional optional fields: timestamp filter (`[1]`), label filter (`[6]`), sort order (`[7]`).
+
+The `Search` method is also registered on a separate search-specific client prototype (`QJ.prototype.search`), but the RPC path and payload format are the same.
+
+#### Response Body
+
+Array of matching recording results with highlighted transcript matches.
+
+---
+
+### 4.13 SingleRecordingSearch
+
+Searches within a single recording's transcript.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../PlaybackService/SingleRecordingSearch` |
+
+#### Request Body
+
+```json
+["recording_id_uuid", "search_query"]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | Recording ID |
+| `[1]` | `string` | Search query text |
+
+Optional fields: timestamp filter (`[3]`), label filter (`[4]`).
+
+#### Response Body
+
+Array of matching transcript segments within the recording.
+
+---
+
+### 4.14 ChangeShareState
+
+Changes the sharing visibility state of a recording (e.g. enabling/disabling link sharing).
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../PlaybackService/ChangeShareState` |
+
+#### Request Body
+
+```json
+["recording_id_uuid", state]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | Recording ID |
+| `[1]` | `int` | Share state: `1` = enable sharing, `2` = disable sharing |
+
+#### Response Body
+
+```json
+[state]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `int` | `2` = confirmed state change |
+
+---
+
+### 4.15 WriteShareList
+
+Creates or updates sharing settings (recipients, permissions) for a recording.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../PlaybackService/WriteShareList` |
+
+#### Request Body
+
+```json
+["recording_id_uuid", [recipients], visibility, extra_field]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | Recording ID |
+| `[1]` | `array` | Array of recipient objects, each containing `[null, null, email, access_level]` where `access_level` is `2` (observed). |
+| `[2]` | *(unknown)* | Visibility / permission level |
+| `[3]` | *(unknown)* | Additional sharing parameter |
+
+#### Response Body
+
+Returns updated share list (same structure as `GetShareList` when populated).
+
+---
+
+### 4.16 BlockPerson
+
+Blocks a person from accessing a shared recording.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../PlaybackService/BlockPerson` |
+
+#### Request Body
+
+```json
+["share_id", "recording_id_uuid"]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | The share/person identifier to block |
+| `[1]` | `string` | Recording ID |
+
+#### Response Body
+
+Confirmation of block operation.
+
+---
+
+### 4.17 Monitoring / Analytics
 
 The web app sends monitoring pings for telemetry. These are **not required** for data access.
 
-#### 4.9.1 API Call Monitoring
+#### 4.17.1 API Call Monitoring
 
 | Field | Value |
 |---|---|
@@ -415,7 +646,7 @@ The web app sends monitoring pings for telemetry. These are **not required** for
 | `[3]` | `string` | HTTP status code (as string) |
 | `[4]` | `float` | Request duration in milliseconds |
 
-#### 4.9.2 Page View Monitoring
+#### 4.17.2 Page View Monitoring
 
 | Field | Value |
 |---|---|
@@ -467,3 +698,355 @@ https://usercontent.recorder.google.com/download/playback/{recording_id}
 ```
 
 This also requires authenticated session cookies.
+
+---
+
+## 8. EditingService
+
+A separate gRPC service for mutating recording content (audio, transcript, speakers). All editing operations require an active **edit session** — open a session, perform edits, then save and close.
+
+**Service package:** `java.com.google.wireless.android.pixel.recorder.sharedclient.audioediting.protos.EditingService`
+
+**RPC pattern:**
+```
+POST /$rpc/java.com.google.wireless.android.pixel.recorder.sharedclient.audioediting.protos.EditingService/{MethodName}
+```
+
+**Base URL:** Same as PlaybackService — `https://pixelrecorder-pa.clients6.google.com`
+
+**Headers:** Same as PlaybackService (§2).
+
+### 8.1 Edit Session Lifecycle
+
+All editing operations follow this workflow:
+
+1. **OpenSession** — acquire a session ID for the recording's share ID
+2. **Perform edits** — RenameSpeaker, SwitchSpeaker, SplitTranscription, CropAudio, RemoveAudio (can be called multiple times; UndoEdit to revert)
+3. **SaveAudio** — commit all pending edits
+4. **CloseSession** — release the session
+
+If edits are not saved before closing, changes are discarded.
+
+---
+
+### 8.2 OpenSession
+
+Opens an editing session for a recording. Returns a session ID used by all subsequent editing calls.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../EditingService/OpenSession` |
+
+#### Request Body
+
+```json
+["share_id"]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | The recording's share ID (same as Recording ID, index `[13]`) |
+
+#### Response Body
+
+```json
+["session_id"]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | Session ID (used by all subsequent editing RPCs) |
+
+**Error codes:**
+- gRPC code `5` (NOT_FOUND): The share ID does not exist.
+
+---
+
+### 8.3 CloseSession
+
+Closes an editing session, releasing server-side resources. Unsaved changes are discarded.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../EditingService/CloseSession` |
+
+#### Request Body
+
+```json
+["session_id"]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | Session ID from OpenSession |
+
+#### Response Body
+
+Empty on success.
+
+**Error codes:**
+- gRPC code `5`: Session ID expired or does not exist.
+
+---
+
+### 8.4 RenameSpeaker
+
+Renames a speaker label within a recording. Requires an open edit session.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../EditingService/RenameSpeaker` |
+
+#### Request Body
+
+```json
+["session_id", [[[speaker_id], "new_display_name"]]]
+```
+
+Nested structure (inferred from JS):
+
+| Level | Description |
+|---|---|
+| `[0]` | `string` — Session ID |
+| `[1]` | Wrapper containing speaker ID and new name |
+| `[1][0]` | Speaker identifier object: `[[speaker_id]]` where `speaker_id` is the integer speaker number |
+| `[1][1]` | New display name object: `["new_name"]` |
+
+The JS constructs this as:
+- Field 1: session ID (string)
+- Field 2: rename payload containing:
+  - Sub-field 1: speaker ID wrapper (`[[speaker_num]]`) — the speaker number from the recording's speakers array (`[20]`)
+  - Sub-field 2: new name wrapper (`["new_display_name"]`)
+
+#### Response Body
+
+Returns the updated speakers list:
+
+```json
+[
+  [
+    [[speaker_id_bytes], "display_name"],
+    [[speaker_id_bytes], "display_name"],
+    ...
+  ]
+]
+```
+
+Each entry contains the speaker ID and its (possibly updated) display name. Parsed into `{ speakerId, displayName }` objects.
+
+---
+
+### 8.5 SwitchSpeaker
+
+Reassigns a transcript segment to a different speaker. Requires an open edit session.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../EditingService/SwitchSpeaker` |
+
+#### Request Body
+
+```json
+["session_id", [transcript_segment_ids], [target_speaker]]
+```
+
+| Level | Description |
+|---|---|
+| `[0]` | `string` — Session ID |
+| `[1]` | Transcript segment identifiers (array of segment positions/IDs to reassign) |
+| `[2]` | Target speaker specification — one of: `[[speaker_num]]` (existing speaker by number) or `["new_speaker_name"]` (new speaker by display name) |
+
+#### Response Body
+
+Returns the updated recording data (transcript + metadata) after the speaker switch.
+
+---
+
+### 8.6 SplitTranscription
+
+Splits a transcript segment at a specified position. Requires an open edit session.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../EditingService/SplitTranscription` |
+
+#### Request Body
+
+```json
+["session_id", [split_position_data]]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | Session ID |
+| `[1]` | `array` | Split position within the transcript (segment/word index) |
+
+#### Response Body
+
+Returns updated recording data with the transcript now split at the specified position.
+
+---
+
+### 8.7 CropAudio
+
+Crops the audio to a specified time range, removing content outside the range. Requires an open edit session.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../EditingService/CropAudio` |
+
+#### Request Body
+
+```json
+["session_id", [[start_seconds, start_nanos], [end_seconds, end_nanos]]]
+```
+
+| Level | Description |
+|---|---|
+| `[0]` | `string` — Session ID |
+| `[1]` | Crop range containing start and end timestamps as protobuf Duration/Timestamp objects: `[seconds_int, nanoseconds_int]` |
+
+The JS validates that the start time is before the end time before sending.
+
+#### Response Body
+
+Returns updated recording data with audio cropped to the specified range.
+
+---
+
+### 8.8 RemoveAudio
+
+Removes a section of audio from the recording. Requires an open edit session.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../EditingService/RemoveAudio` |
+
+#### Request Body
+
+```json
+["session_id", [[start_seconds, start_nanos], [end_seconds, end_nanos]]]
+```
+
+Structure is the same as CropAudio — specifies the time range to **remove**.
+
+#### Response Body
+
+Returns updated recording data with the specified audio section removed.
+
+---
+
+### 8.9 SaveAudio
+
+Commits all pending edits in the current session. This persists the changes.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../EditingService/SaveAudio` |
+
+#### Request Body
+
+```json
+["session_id", [[["title"]], ["recording_id_uuid"]]]
+```
+
+| Level | Description |
+|---|---|
+| `[0]` | `string` — Session ID |
+| `[1]` | Save metadata containing the recording title and UUID |
+
+The JS sends the current recording title and UUID so the server can associate the saved edits.
+
+#### Response Body
+
+```json
+["new_share_id", status]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | New share ID (may differ from the original if the recording was re-created) |
+| `[1]` | `int` | Status — `2` indicates user storage exceeded |
+
+**Error handling:**
+- If `[0]` is empty and `[1]` is `2`: user storage quota exceeded.
+- Session ID expired: `SESSION_ID_EXPIRED` error.
+
+---
+
+### 8.10 UndoEdit
+
+Reverts the last edit operation within the current session. Requires an open edit session.
+
+| Field | Value |
+|---|---|
+| **Path** | `/$rpc/.../EditingService/UndoEdit` |
+
+#### Request Body
+
+```json
+["session_id"]
+```
+
+| Index | Type | Description |
+|---|---|---|
+| `[0]` | `string` | Session ID |
+
+#### Response Body
+
+Returns updated recording data after undoing the last operation.
+
+---
+
+### 8.11 EditingService Method Summary
+
+| Method | Purpose | Mutating |
+|---|---|---|
+| `OpenSession` | Start an edit session for a recording | No |
+| `CloseSession` | End an edit session (discards unsaved changes) | No |
+| `RenameSpeaker` | Rename a speaker label | Yes |
+| `SwitchSpeaker` | Reassign transcript segments to a different speaker | Yes |
+| `SplitTranscription` | Split a transcript segment at a position | Yes |
+| `CropAudio` | Crop audio to a time range | Yes |
+| `RemoveAudio` | Remove a section of audio | Yes |
+| `SaveAudio` | Commit all pending edits | Yes |
+| `UndoEdit` | Revert the last edit | Yes |
+
+---
+
+## 9. Complete API Method Index
+
+### PlaybackService Methods
+
+| # | Method | Documented | Purpose |
+|---|---|---|---|
+| 1 | `GetRecordingList` | §4.1 | Paginated list of recordings |
+| 2 | `GetRecordingInfo` | §4.2 | Full metadata for one recording |
+| 3 | `GetTranscription` | §4.3 | Word-level transcript |
+| 4 | `ListLabels` | §4.4 | Available labels/tags |
+| 5 | `GetShareList` | §4.5 | Sharing info for a recording |
+| 6 | `GetAudioTag` | §4.6 | Speaker-activity timeline |
+| 7 | `GetWaveform` | §4.7 | Waveform amplitude data |
+| 8 | `GetGlobalSearchReadiness` | §4.8 | Check if global search is available |
+| 9 | `UpdateRecordingTitle` | §4.9 | Rename a recording |
+| 10 | `UpdateRecordingLabels` | §4.10 | Add/remove labels |
+| 11 | `DeleteRecordingList` | §4.11 | Delete recordings |
+| 12 | `Search` | §4.12 | Global keyword search |
+| 13 | `SingleRecordingSearch` | §4.13 | Search within one recording |
+| 14 | `ChangeShareState` | §4.14 | Enable/disable sharing |
+| 15 | `WriteShareList` | §4.15 | Update share recipients |
+| 16 | `BlockPerson` | §4.16 | Block a person from a share |
+
+### EditingService Methods
+
+| # | Method | Documented | Purpose |
+|---|---|---|---|
+| 1 | `OpenSession` | §8.2 | Start editing session |
+| 2 | `CloseSession` | §8.3 | End editing session |
+| 3 | `RenameSpeaker` | §8.4 | Rename speaker label |
+| 4 | `SwitchSpeaker` | §8.5 | Reassign transcript to speaker |
+| 5 | `SplitTranscription` | §8.6 | Split transcript segment |
+| 6 | `CropAudio` | §8.7 | Crop audio to range |
+| 7 | `RemoveAudio` | §8.8 | Remove audio section |
+| 8 | `SaveAudio` | §8.9 | Commit edits |
+| 9 | `UndoEdit` | §8.10 | Revert last edit |
