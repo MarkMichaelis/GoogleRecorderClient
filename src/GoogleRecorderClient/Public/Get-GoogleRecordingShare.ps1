@@ -16,20 +16,40 @@
         Get-GoogleRecordingShare -RecordingId 'de3d94a9-...'
         # Returns share objects for the recording.
 
+    .PARAMETER Title
+        A title or wildcard pattern to resolve recordings by name. Alias: Name.
+
     .EXAMPLE
         Get-GoogleRecording -First 1 | Get-GoogleRecordingShare
         # Pipes a recording to get its share list.
+
+    .EXAMPLE
+        Get-GoogleRecordingShare 'My Meeting'
     #>
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ById')]
     [OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ParameterSetName = 'ById', ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
-        [string]$RecordingId
+        [string]$RecordingId,
+
+        [Parameter(Mandatory, ParameterSetName = 'ByTitle', Position = 0)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('Name')]
+        [SupportsWildcards()]
+        [string]$Title
     )
 
     process {
     Assert-RecorderSession
+
+    if ($PSCmdlet.ParameterSetName -eq 'ByTitle') {
+        $resolved = Resolve-RecordingByTitle -Title $Title
+        foreach ($rec in $resolved) {
+            Get-GoogleRecordingShare -RecordingId $rec.RecordingId
+        }
+        return
+    }
 
     $body   = "[`"$RecordingId`"]"
     $result = Invoke-RecorderRpc -Method 'GetShareList' -Body $body

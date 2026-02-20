@@ -75,7 +75,7 @@ Describe 'Module structure' -Tag 'Functional' {
         $commands.Name | Should -Not -Contain 'Get-UnixTimestamp'
         $commands.Name | Should -Not -Contain 'Get-SingleRecording'
         $commands.Name | Should -Not -Contain 'Get-RecordingList'
-        $commands.Name | Should -Not -Contain 'Resolve-AudioOutputPath'
+        $commands.Name | Should -Not -Contain 'Resolve-OutputFilePath'
         $commands.Name | Should -Not -Contain 'Build-AudioDownloadHeaders'
     }
 }

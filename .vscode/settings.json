@@ -38,6 +38,7 @@
         "Resolve-Path": true,
         "Rename-Item": true,
         "New-Item": true,
-        "Out-Null": true
+        "Out-Null": true,
+        "InModuleScope": true
     }
 }
