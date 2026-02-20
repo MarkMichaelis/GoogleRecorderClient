@@ -52,7 +52,7 @@
         $session = Resolve-ClientConfig -CookieHeader $CookieHeader -ApiKeyOverride $ApiKey
         $script:RecorderSession = $session
         Save-SessionCache -Session $session -Path $cacheFile
-        Write-Host "Connected to Google Recorder as $($session.Email)." -ForegroundColor Green
+        Write-Information "Connected to Google Recorder as $($session.Email)." -InformationAction Continue
         return
     }
 
@@ -68,7 +68,7 @@
             }
             $null = Invoke-ClientConfigRequest -CookieHeader $session.CookieHeader
             $script:RecorderSession = $session
-            Write-Host "Restored cached session for $($session.Email)." -ForegroundColor Green
+            Write-Information "Restored cached session for $($session.Email)." -InformationAction Continue
             return
         }
         catch {
@@ -82,7 +82,7 @@
         $session = Get-AuthViaManualEntry
         $script:RecorderSession = $session
         Save-SessionCache -Session $session -Path $cacheFile
-        Write-Host 'Connected to Google Recorder.' -ForegroundColor Green
+        Write-Information 'Connected to Google Recorder.' -InformationAction Continue
         return
     }
 
@@ -93,7 +93,7 @@
     }
     $script:RecorderSession = $session
     Save-SessionCache -Session $session -Path $cacheFile
-    Write-Host "Connected to Google Recorder as $($session.Email)." -ForegroundColor Green
+    Write-Information "Connected to Google Recorder as $($session.Email)." -InformationAction Continue
 }
 
 
@@ -137,7 +137,7 @@ function Save-SessionCache {
 
 function Get-AuthViaManualEntry {
     Start-Process 'https://recorder.google.com'
-    Write-Host @"
+        Write-Information @"
 
   +---------------------------------------------------------------+
   |  MANUAL AUTHENTICATION                                        |
@@ -150,7 +150,7 @@ function Get-AuthViaManualEntry {
   |  6. From the Headers tab, copy the full Cookie header value    |
   +---------------------------------------------------------------+
 
-"@ -ForegroundColor Yellow
+"@ -InformationAction Continue
 
     $apiKey       = Read-Host 'Paste the API key (apiKey from clientconfig response)'
     $cookieHeader = Read-Host 'Paste the full Cookie header value'
@@ -186,7 +186,7 @@ function Get-AuthViaPlaywright {
     }
     if (-not (Test-Path $projectPath)) {
         Write-Warning "PlaywrightAuth project not found at: $projectPath"
-        Write-Host '  Falling back to manual entry.' -ForegroundColor Yellow
+        Write-Information '  Falling back to manual entry.' -InformationAction Continue
         return Get-AuthViaManualEntry
     }
 
@@ -194,16 +194,16 @@ function Get-AuthViaPlaywright {
     $dotnetPath = Get-Command dotnet -ErrorAction SilentlyContinue
     if (-not $dotnetPath) {
         Write-Warning '.NET SDK (dotnet) is not installed or not in PATH.'
-        Write-Host '  Falling back to manual entry.' -ForegroundColor Yellow
+        Write-Information '  Falling back to manual entry.' -InformationAction Continue
         return Get-AuthViaManualEntry
     }
 
-    Write-Host ''
-    Write-Host '=== Google Recorder Authentication ===' -ForegroundColor Cyan
-    Write-Host 'Chrome will open with a saved profile.' -ForegroundColor DarkGray
-    Write-Host 'If this is your first time, log into your Google account.' -ForegroundColor Yellow
-    Write-Host 'On subsequent runs, your saved session will be reused automatically.' -ForegroundColor DarkGray
-    Write-Host ''
+    Write-Information '' -InformationAction Continue
+    Write-Information '=== Google Recorder Authentication ===' -InformationAction Continue
+    Write-Information 'Chrome will open with a saved profile.' -InformationAction Continue
+    Write-Information 'If this is your first time, log into your Google account.' -InformationAction Continue
+    Write-Information 'On subsequent runs, your saved session will be reused automatically.' -InformationAction Continue
+    Write-Information '' -InformationAction Continue
 
     # Build arguments: dotnet run --project <path> -- [--force]
     $dotnetArgs = "run --project `"$projectPath`""
@@ -225,7 +225,7 @@ function Get-AuthViaPlaywright {
 
     $stderrJob = Register-ObjectEvent -InputObject $process -EventName 'ErrorDataReceived' -Action {
         if ($null -ne $EventArgs.Data) {
-            Write-Host "  $($EventArgs.Data)" -ForegroundColor DarkGray
+            Write-Verbose "  $($EventArgs.Data)"
         }
     }
 
@@ -242,13 +242,13 @@ function Get-AuthViaPlaywright {
 
     if ($exitCode -ne 0) {
         Write-Warning "Playwright authentication failed (exit code $exitCode)."
-        Write-Host '  Falling back to manual entry.' -ForegroundColor Yellow
+        Write-Information '  Falling back to manual entry.' -InformationAction Continue
         return Get-AuthViaManualEntry
     }
 
     if ([string]::IsNullOrWhiteSpace($stdout)) {
         Write-Warning 'Playwright returned no output.'
-        Write-Host '  Falling back to manual entry.' -ForegroundColor Yellow
+        Write-Information '  Falling back to manual entry.' -InformationAction Continue
         return Get-AuthViaManualEntry
     }
 
@@ -257,13 +257,13 @@ function Get-AuthViaPlaywright {
     }
     catch {
         Write-Warning "Could not parse Playwright output: $_"
-        Write-Host '  Falling back to manual entry.' -ForegroundColor Yellow
+        Write-Information '  Falling back to manual entry.' -InformationAction Continue
         return Get-AuthViaManualEntry
     }
 
     if (-not $result.cookieHeader -or -not $result.apiKey) {
         Write-Warning 'Playwright output is missing cookieHeader or apiKey.'
-        Write-Host '  Falling back to manual entry.' -ForegroundColor Yellow
+        Write-Information '  Falling back to manual entry.' -InformationAction Continue
         return Get-AuthViaManualEntry
     }
 

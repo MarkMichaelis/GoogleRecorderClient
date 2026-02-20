@@ -75,6 +75,7 @@ Export-ModuleMember -Function @(
     'Remove-GoogleRecording'
     'Rename-GoogleRecording'
     'Rename-GoogleRecordingSpeaker'
+    'Search-GoogleRecording'
     'Save-GoogleRecordingAudio'
     'Set-GoogleRecordingSpeaker'
     'Split-GoogleRecordingTranscript'

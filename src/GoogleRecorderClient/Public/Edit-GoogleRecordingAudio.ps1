@@ -76,28 +76,14 @@ function Edit-GoogleRecordingAudio {
         }
 
         foreach ($rec in $recordings) {
-            $targetId    = $rec.RecordingId
-            $targetTitle = $rec.Title
+            $targetId = $rec.RecordingId
 
             if (-not $PSCmdlet.ShouldProcess("Recording '$targetId'", $action)) {
                 continue
             }
 
-            $sessionId = $null
-            try {
-                $openBody   = "[`"$targetId`"]"
-                $openResult = Invoke-EditingRpc -Method 'OpenSession' -Body $openBody
-
-                if ($openResult -is [string]) {
-                    $sessionId = $openResult
-                }
-                elseif ($openResult -is [System.Collections.IEnumerable]) {
-                    $sessionId = ($openResult | Select-Object -First 1)
-                }
-
-                if (-not $sessionId) {
-                    throw "Failed to open editing session for recording '$targetId'."
-                }
+            Invoke-EditingSessionAction -RecordingId $targetId -Action {
+                param($SessionId)
 
                 $startSeconds = [int][Math]::Floor($Start.TotalSeconds)
                 $startNanos   = [int](($Start.Ticks % 10000000) * 100)
@@ -105,21 +91,8 @@ function Edit-GoogleRecordingAudio {
                 $endNanos     = [int](($End.Ticks % 10000000) * 100)
                 $rangeBody    = "[[${startSeconds},${startNanos}],[${endSeconds},${endNanos}]]"
 
-                $editBody   = "[`"$sessionId`",$rangeBody]"
-                $editResult = Invoke-EditingRpc -Method $method -Body $editBody
-
-                $saveBody = "[`"$sessionId`",[[[`"$targetTitle`"]],[`"$targetId`"]]]"
-                $null = Invoke-EditingRpc -Method 'SaveAudio' -Body $saveBody
-
-                if ($null -ne $editResult) {
-                    $editResult
-                }
-            }
-            finally {
-                if ($sessionId) {
-                    $closeBody = "[`"$sessionId`"]"
-                    $null = Invoke-EditingRpc -Method 'CloseSession' -Body $closeBody
-                }
+                $editBody   = "[`"$SessionId`",$rangeBody]"
+                Invoke-EditingRpc -Method $method -Body $editBody
             }
         }
     }
