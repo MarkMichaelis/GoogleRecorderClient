@@ -39,6 +39,7 @@
         "Rename-Item": true,
         "New-Item": true,
         "Out-Null": true,
-        "InModuleScope": true
+        "InModuleScope": true,
+        "ConvertTo-Json": true
     }
 }

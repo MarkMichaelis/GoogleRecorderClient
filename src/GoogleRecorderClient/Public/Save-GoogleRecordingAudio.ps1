@@ -71,7 +71,7 @@
         $session     = $script:RecorderSession
         $resolvedOut = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($OutputPath)
         $filePath    = Resolve-OutputFilePath -OutputPath $resolvedOut -BaseName $RecordingId -Extension '.m4a' -Force:$Force
-        $headers     = Build-AudioDownloadHeaders -Session $session
+        $headers     = Build-AudioDownloadHeader -Session $session
 
         if ($PSCmdlet.ShouldProcess($filePath, 'Download audio file')) {
             $url = "https://usercontent.recorder.google.com/download/playback/$RecordingId"
@@ -84,7 +84,7 @@
     }
 }
 
-function Build-AudioDownloadHeaders {
+function Build-AudioDownloadHeader {
     <#
     .SYNOPSIS
         Builds HTTP headers for the audio download request.

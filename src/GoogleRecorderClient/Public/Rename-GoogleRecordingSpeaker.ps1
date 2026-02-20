@@ -52,43 +52,17 @@ function Rename-GoogleRecordingSpeaker {
         }
 
         foreach ($rec in $recordings) {
-            $targetId    = $rec.RecordingId
-            $targetTitle = $rec.Title
+            $targetId = $rec.RecordingId
 
             if (-not $PSCmdlet.ShouldProcess("Recording '$targetId'", "Rename speaker $SpeakerId to '$NewName'")) {
                 continue
             }
 
-            $sessionId = $null
-            try {
-                $openBody   = "[`"$targetId`"]"
-                $openResult = Invoke-EditingRpc -Method 'OpenSession' -Body $openBody
-                if ($openResult -is [string]) {
-                    $sessionId = $openResult
-                }
-                elseif ($openResult -is [System.Collections.IEnumerable]) {
-                    $sessionId = ($openResult | Select-Object -First 1)
-                }
+            Invoke-EditingSessionAction -RecordingId $targetId -Action {
+                param($SessionId)
 
-                if (-not $sessionId) {
-                    throw "Failed to open editing session for recording '$targetId'."
-                }
-
-                $renameBody = "[`"$($sessionId)`",[[[$SpeakerId],`"$NewName`"]]]"
-                $renameResult = Invoke-EditingRpc -Method 'RenameSpeaker' -Body $renameBody
-
-                $saveBody = "[`"$($sessionId)`",[[[`"$targetTitle`"]],[`"$targetId`"]]]"
-                $null = Invoke-EditingRpc -Method 'SaveAudio' -Body $saveBody
-
-                if ($null -ne $renameResult) {
-                    $renameResult
-                }
-            }
-            finally {
-                if ($sessionId) {
-                    $closeBody = "[`"$sessionId`"]"
-                    $null = Invoke-EditingRpc -Method 'CloseSession' -Body $closeBody
-                }
+                $renameBody = "[`"$SessionId`",[[[$SpeakerId],`"$NewName`"]]]"
+                Invoke-EditingRpc -Method 'RenameSpeaker' -Body $renameBody
             }
         }
     }

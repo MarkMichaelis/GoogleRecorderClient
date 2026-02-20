@@ -22,5 +22,5 @@ function Disconnect-GoogleRecorder {
         Write-Verbose "Removed session cache: $cacheFile"
     }
 
-    Write-Host 'Disconnected from Google Recorder.' -ForegroundColor Yellow
+    Write-Information 'Disconnected from Google Recorder.' -InformationAction Continue
 }

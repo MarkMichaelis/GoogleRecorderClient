@@ -46,44 +46,18 @@ function Split-GoogleRecordingTranscript {
         }
 
         foreach ($rec in $recordings) {
-            $targetId    = $rec.RecordingId
-            $targetTitle = $rec.Title
+            $targetId = $rec.RecordingId
 
             if (-not $PSCmdlet.ShouldProcess("Recording '$targetId'", 'Split transcript')) {
                 continue
             }
 
-            $sessionId = $null
-            try {
-                $openBody   = "[`"$targetId`"]"
-                $openResult = Invoke-EditingRpc -Method 'OpenSession' -Body $openBody
-                if ($openResult -is [string]) {
-                    $sessionId = $openResult
-                }
-                elseif ($openResult -is [System.Collections.IEnumerable]) {
-                    $sessionId = ($openResult | Select-Object -First 1)
-                }
-
-                if (-not $sessionId) {
-                    throw "Failed to open editing session for recording '$targetId'."
-                }
+            Invoke-EditingSessionAction -RecordingId $targetId -Action {
+                param($SessionId)
 
                 $positionList = ($Position -join ',')
-                $splitBody = "[`"$($sessionId)`",[$positionList]]"
-                $splitResult = Invoke-EditingRpc -Method 'SplitTranscription' -Body $splitBody
-
-                $saveBody = "[`"$($sessionId)`",[[[`"$targetTitle`"]],[`"$targetId`"]]]"
-                $null = Invoke-EditingRpc -Method 'SaveAudio' -Body $saveBody
-
-                if ($null -ne $splitResult) {
-                    $splitResult
-                }
-            }
-            finally {
-                if ($sessionId) {
-                    $closeBody = "[`"$($sessionId)`"]"
-                    $null = Invoke-EditingRpc -Method 'CloseSession' -Body $closeBody
-                }
+                $splitBody = "[`"$SessionId`",[$positionList]]"
+                Invoke-EditingRpc -Method 'SplitTranscription' -Body $splitBody
             }
         }
     }
