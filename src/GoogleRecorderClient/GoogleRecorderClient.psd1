@@ -15,14 +15,19 @@
     FunctionsToExport = @(
         'Connect-GoogleRecorder'
         'Disconnect-GoogleRecorder'
+        'Edit-GoogleRecordingAudio'
         'Get-GoogleRecorderLabel'
         'Get-GoogleRecording'
         'Get-GoogleRecordingAudioTag'
         'Get-GoogleRecordingShare'
         'Get-GoogleRecordingTranscript'
         'Get-GoogleRecordingWaveform'
+        'Remove-GoogleRecording'
         'Rename-GoogleRecording'
+        'Rename-GoogleRecordingSpeaker'
         'Save-GoogleRecordingAudio'
+        'Set-GoogleRecordingSpeaker'
+        'Split-GoogleRecordingTranscript'
         'Test-GoogleRecorderSearch'
     )
 
