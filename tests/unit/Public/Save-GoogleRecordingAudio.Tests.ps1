@@ -75,4 +75,75 @@ Describe 'Save-GoogleRecordingAudio' {
 
         Should -Invoke -ModuleName GoogleRecorderClient Invoke-WebRequest -Times 1
     }
+
+    It 'does not download when -WhatIf is specified' {
+        InModuleScope GoogleRecorderClient {
+            $script:RecorderSession = @{
+                CookieHeader = 'SID=abc; SAPISID=mno/pqr'
+                ApiKey       = 'k'
+                Email        = 'x'
+                BaseUrl      = 'https://pixelrecorder-pa.clients6.google.com'
+            }
+        }
+
+        Mock -ModuleName GoogleRecorderClient Invoke-WebRequest { }
+
+        $testFile = Join-Path $TestDrive 'whatif.m4a'
+        Save-GoogleRecordingAudio -RecordingId 'test-id' -OutputPath $testFile -WhatIf
+
+        Should -Invoke -ModuleName GoogleRecorderClient Invoke-WebRequest -Times 0
+    }
+
+    It 'throws when file exists and -Force is not set' {
+        InModuleScope GoogleRecorderClient {
+            $script:RecorderSession = @{
+                CookieHeader = 'SID=abc; SAPISID=mno/pqr'
+                ApiKey       = 'k'
+                Email        = 'x'
+                BaseUrl      = 'https://pixelrecorder-pa.clients6.google.com'
+            }
+        }
+
+        $existingFile = Join-Path $TestDrive 'existing.m4a'
+        Set-Content -Path $existingFile -Value 'data'
+
+        { Save-GoogleRecordingAudio -RecordingId 'test-id' -OutputPath $existingFile } |
+            Should -Throw '*File already exists*'
+    }
+
+    It 'overwrites when file exists and -Force is set' {
+        InModuleScope GoogleRecorderClient {
+            $script:RecorderSession = @{
+                CookieHeader = 'SID=abc; SAPISID=mno/pqr'
+                ApiKey       = 'k'
+                Email        = 'x'
+                BaseUrl      = 'https://pixelrecorder-pa.clients6.google.com'
+            }
+        }
+
+        $existingFile = Join-Path $TestDrive 'force.m4a'
+        Set-Content -Path $existingFile -Value 'old data'
+
+        Mock -ModuleName GoogleRecorderClient Invoke-WebRequest { }
+
+        Save-GoogleRecordingAudio -RecordingId 'test-id' -OutputPath $existingFile -Force
+
+        Should -Invoke -ModuleName GoogleRecorderClient Invoke-WebRequest -Times 1
+    }
+
+    It 'throws when parent directory does not exist' {
+        InModuleScope GoogleRecorderClient {
+            $script:RecorderSession = @{
+                CookieHeader = 'SID=abc; SAPISID=mno/pqr'
+                ApiKey       = 'k'
+                Email        = 'x'
+                BaseUrl      = 'https://pixelrecorder-pa.clients6.google.com'
+            }
+        }
+
+        $badPath = Join-Path $TestDrive 'nonexistent' 'output.m4a'
+
+        { Save-GoogleRecordingAudio -RecordingId 'test-id' -OutputPath $badPath } |
+            Should -Throw '*Directory not found*'
+    }
 }

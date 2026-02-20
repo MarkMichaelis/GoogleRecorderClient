@@ -94,11 +94,18 @@ Retrieves word-level transcripts for a recording via the `GetTranscription` RPC.
 |---|---|
 | `-RecordingId` | UUID of the recording. Accepts pipeline input by property name. |
 | `-AsText` | Return the transcript as a single plain text string instead of word objects. |
+| `-OutputPath` | File path or directory to save the transcript as text. If a directory, auto-generates `{RecordingId}.txt`. Implies `-AsText`. |
+| `-Force` | Overwrite the output file if it already exists. |
 
 **Acceptance Criteria:**
 
 - Returns `GoogleRecorder.TranscriptWord` objects with Word, RawWord, StartMs, EndMs, SpeakerId.
 - With `-AsText`, returns a space-joined string of all words.
+- With `-OutputPath`, saves the transcript text to a file.
+- Validates parent directory exists; throws if missing.
+- Without `-Force`, throws if the output file already exists.
+- Supports `-WhatIf` and `-Confirm` when saving to a file.
+- Resolves relative paths correctly via `GetUnresolvedProviderPathFromPSPath`.
 - Writes a warning when no transcript is found.
 - Supports pipeline: `Get-GoogleRecording -First 1 | Get-GoogleRecordingTranscript -AsText`.
 
@@ -181,13 +188,18 @@ Downloads the audio file for a recording via direct HTTP download.
 | Parameter | Description |
 |---|---|
 | `-RecordingId` | UUID of the recording. Accepts pipeline input by property name. |
-| `-OutputPath` | Path to save the audio file. If a directory, auto-generates the filename. |
+| `-OutputPath` | Path to save the audio file. If a directory, auto-generates `{RecordingId}.m4a`. |
+| `-Force` | Overwrite the output file if it already exists. |
 
 **Acceptance Criteria:**
 
 - Downloads from `https://usercontent.recorder.google.com/download/playback/{id}`.
 - Uses session cookies and SAPISIDHASH authorization.
 - Auto-generates filename as `{RecordingId}.m4a` when only a directory is given.
+- Validates parent directory exists; throws if missing.
+- Without `-Force`, throws if the output file already exists.
+- Supports `-WhatIf` and `-Confirm`.
+- Resolves relative paths correctly via `GetUnresolvedProviderPathFromPSPath`.
 
 ### 13. Test Search Readiness (`Test-GoogleRecorderSearch`)
 
@@ -228,6 +240,7 @@ Tests whether the user's recording library has been indexed for global search vi
 | `Format-RecorderDuration` | Formats seconds as mm:ss or hh:mm:ss. |
 | `Format-RawRecording` | Maps raw API arrays to Recording objects. |
 | `Get-UnixTimestamp` | Gets current Unix timestamp with nanoseconds. |
+| `Resolve-OutputFilePath` | Validates and resolves output file paths (directory expansion, parent validation, overwrite protection). |
 
 ### Output Types
 

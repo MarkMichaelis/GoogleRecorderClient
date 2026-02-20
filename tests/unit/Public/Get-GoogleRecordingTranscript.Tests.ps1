@@ -125,4 +125,140 @@ Describe 'Get-GoogleRecordingTranscript' {
 
         $result | Should -Not -BeNullOrEmpty
     }
+
+    It 'saves transcript to file with -OutputPath' {
+        InModuleScope GoogleRecorderClient {
+            $script:RecorderSession = @{
+                CookieHeader = 'SAPISID=val'; ApiKey = 'k'; Email = 'x'; BaseUrl = 'https://example.com'
+            }
+        }
+
+        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc {
+            return ,@(
+                ,@(
+                    ,@(
+                        ,@(
+                            @('hello', 'Hello,', '3620', '3860', $null, $null, @(1, 1)),
+                            @('world', 'world.', '3860', '4100', $null, $null, @(1, 1))
+                        )
+                    )
+                )
+            )
+        }
+
+        $outFile = Join-Path $TestDrive 'transcript.txt'
+        Get-GoogleRecordingTranscript -RecordingId 'test-id' -OutputPath $outFile
+
+        Test-Path $outFile | Should -BeTrue
+        $content = Get-Content -Path $outFile -Raw
+        $content | Should -BeLike '*Hello,*world.*'
+    }
+
+    It 'does not write file when -WhatIf is specified with -OutputPath' {
+        InModuleScope GoogleRecorderClient {
+            $script:RecorderSession = @{
+                CookieHeader = 'SAPISID=val'; ApiKey = 'k'; Email = 'x'; BaseUrl = 'https://example.com'
+            }
+        }
+
+        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc {
+            return ,@(
+                ,@(
+                    ,@(
+                        ,@(
+                            @('hello', 'Hello,', '3620', '3860', $null, $null, @(1, 1)),
+                            @('world', 'world.', '3860', '4100', $null, $null, @(1, 1))
+                        )
+                    )
+                )
+            )
+        }
+
+        $outFile = Join-Path $TestDrive 'whatif.txt'
+        Get-GoogleRecordingTranscript -RecordingId 'test-id' -OutputPath $outFile -WhatIf
+
+        Test-Path $outFile | Should -BeFalse
+    }
+
+    It 'throws when file exists and -Force is not set with -OutputPath' {
+        InModuleScope GoogleRecorderClient {
+            $script:RecorderSession = @{
+                CookieHeader = 'SAPISID=val'; ApiKey = 'k'; Email = 'x'; BaseUrl = 'https://example.com'
+            }
+        }
+
+        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc {
+            return ,@(
+                ,@(
+                    ,@(
+                        ,@(
+                            @('hello', 'Hello,', '3620', '3860', $null, $null, @(1, 1)),
+                            @('world', 'world.', '3860', '4100', $null, $null, @(1, 1))
+                        )
+                    )
+                )
+            )
+        }
+
+        $existingFile = Join-Path $TestDrive 'exists.txt'
+        Set-Content -Path $existingFile -Value 'old'
+
+        { Get-GoogleRecordingTranscript -RecordingId 'test-id' -OutputPath $existingFile } |
+            Should -Throw '*File already exists*'
+    }
+
+    It 'overwrites when file exists and -Force is set with -OutputPath' {
+        InModuleScope GoogleRecorderClient {
+            $script:RecorderSession = @{
+                CookieHeader = 'SAPISID=val'; ApiKey = 'k'; Email = 'x'; BaseUrl = 'https://example.com'
+            }
+        }
+
+        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc {
+            return ,@(
+                ,@(
+                    ,@(
+                        ,@(
+                            @('hello', 'Hello,', '3620', '3860', $null, $null, @(1, 1)),
+                            @('world', 'world.', '3860', '4100', $null, $null, @(1, 1))
+                        )
+                    )
+                )
+            )
+        }
+
+        $existingFile = Join-Path $TestDrive 'overwrite.txt'
+        Set-Content -Path $existingFile -Value 'old'
+
+        Get-GoogleRecordingTranscript -RecordingId 'test-id' -OutputPath $existingFile -Force
+
+        $content = Get-Content -Path $existingFile -Raw
+        $content | Should -BeLike '*Hello,*'
+    }
+
+    It 'throws when parent directory does not exist with -OutputPath' {
+        InModuleScope GoogleRecorderClient {
+            $script:RecorderSession = @{
+                CookieHeader = 'SAPISID=val'; ApiKey = 'k'; Email = 'x'; BaseUrl = 'https://example.com'
+            }
+        }
+
+        Mock -ModuleName GoogleRecorderClient Invoke-RecorderRpc {
+            return ,@(
+                ,@(
+                    ,@(
+                        ,@(
+                            @('hello', 'Hello,', '3620', '3860', $null, $null, @(1, 1)),
+                            @('world', 'world.', '3860', '4100', $null, $null, @(1, 1))
+                        )
+                    )
+                )
+            )
+        }
+
+        $badPath = Join-Path $TestDrive 'nonexistent' 'transcript.txt'
+
+        { Get-GoogleRecordingTranscript -RecordingId 'test-id' -OutputPath $badPath } |
+            Should -Throw '*Directory not found*'
+    }
 }
