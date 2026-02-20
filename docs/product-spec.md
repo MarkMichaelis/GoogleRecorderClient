@@ -210,6 +210,130 @@ Tests whether the user's recording library has been indexed for global search vi
 - Returns `$true` when search is ready, `$false` otherwise.
 - Takes no parameters beyond an active session.
 
+### 14. Delete Recordings (`Remove-GoogleRecording`)
+
+Deletes recordings via the `DeleteRecordingList` RPC.
+
+**Parameters:**
+
+| Parameter | Description |
+|---|---|
+| `-RecordingId` | One or more recording UUIDs. Accepts array and pipeline by property name. |
+| `-Title` | Title or wildcard pattern to resolve multiple recordings. Alias: `Name`. |
+
+**Acceptance Criteria:**
+
+- Builds payload as `[["id1","id2",...]]` and calls `DeleteRecordingList` once per invocation.
+- Resolves titles to IDs via `Resolve-RecordingByTitle` when `-Title` is used.
+- Supports `-WhatIf`/`-Confirm` with `ConfirmImpact High`.
+- Throws when not connected.
+
+### 15. Edit Audio (`Edit-GoogleRecordingAudio`)
+
+Crops or removes audio using the `ApplyEdits` RPC on `EditingService`.
+
+**Parameters:**
+
+| Parameter | Description |
+|---|---|
+| `-RecordingId` | Recording UUID(s). Pipeline by property name. |
+| `-Title` | Resolve recordings by title/wildcard. Alias: `Name`. |
+| `-Crop` | Keep only the specified `-Start`/`-End` range. |
+| `-Remove` | Remove the specified `-Start`/`-End` range. |
+| `-Start` / `-End` | `[TimeSpan]` range for crop/remove. |
+| `-OutputPath` | Optional directory/file to save the edited audio. |
+| `-Force` | Overwrite existing output file. |
+
+**Acceptance Criteria:**
+
+- Opens an edit session (`OpenEditSession`), applies edits (`ApplyEdits`), saves audio (`SaveAudio`), and closes the session (`CloseSession`).
+- When `-Title` is provided, resolves recordings and processes each match.
+- With `-OutputPath`, saves edited audio; honors `-Force` and `-WhatIf`.
+- Throws when not connected.
+
+### 16. Split Transcript (`Split-GoogleRecordingTranscript`)
+
+Splits transcript segments and saves audio via EditingService.
+
+**Parameters:**
+
+| Parameter | Description |
+|---|---|
+| `-RecordingId` | Recording UUID(s). Pipeline by property name. |
+| `-Title` | Resolve recordings by title/wildcard. Alias: `Name`. |
+| `-Segments` | Array of segment definitions (`SpeakerId`, `StartMs`, `EndMs`). |
+| `-OutputPath` | Optional directory/file to save audio. |
+| `-Force` | Overwrite existing output file. |
+
+**Acceptance Criteria:**
+
+- Opens edit session, applies `SplitTranscript` edits, saves audio, closes session per recording.
+- Resolves titles to multiple recordings and processes each.
+- Honors `-WhatIf` and `-Confirm` for save operations.
+
+### 17. Rename Speaker (`Rename-GoogleRecordingSpeaker`)
+
+Renames a speaker label within a recording via EditingService.
+
+**Parameters:**
+
+| Parameter | Description |
+|---|---|
+| `-RecordingId` | Recording UUID(s). Pipeline by property name. |
+| `-Title` | Resolve recordings by title/wildcard. Alias: `Name`. |
+| `-SpeakerIndex` | Zero-based speaker index to rename. |
+| `-NewName` | New speaker display name. |
+| `-OutputPath` | Optional directory/file to save audio. |
+| `-Force` | Overwrite existing output file. |
+
+**Acceptance Criteria:**
+
+- Opens edit session, issues `RenameSpeaker` edit, saves audio, closes session.
+- Resolves titles to multiple recordings and processes each.
+- Honors `-WhatIf`/`-Confirm` for save operations.
+
+### 18. Set Speaker (`Set-GoogleRecordingSpeaker`)
+
+Reassigns transcript segments to a speaker or creates a new speaker via EditingService.
+
+**Parameters:**
+
+| Parameter | Description |
+|---|---|
+| `-RecordingId` | Recording UUID(s). Pipeline by property name. |
+| `-Title` | Resolve recordings by title/wildcard. Alias: `Name`. |
+| `-SourceSpeakerIndex` | Speaker index of the segments to move. |
+| `-TargetSpeakerIndex` | Target speaker index. |
+| `-TargetSpeakerName` | Optional new speaker name to create and assign. |
+| `-OutputPath` | Optional directory/file to save audio. |
+| `-Force` | Overwrite existing output file. |
+
+**Acceptance Criteria:**
+
+- Opens edit session, issues `SwitchSpeaker` edit (and creates speaker when name provided), saves audio, closes session.
+- Resolves titles and processes each recording.
+- Honors `-WhatIf`/`-Confirm` for save operations.
+
+### 19. Search Recordings (`Search-GoogleRecording`)
+
+Searches transcripts globally or within a single recording.
+
+**Parameters:**
+
+| Parameter | Description |
+|---|---|
+| `-Query` | Search keywords. |
+| `-RecordingId` | Search within a specific recording. |
+| `-Title` | Resolve recordings by title/wildcard and search each. Alias: `Name`. |
+| `-MaxResults` | Max results for global search. Default 10. |
+
+**Acceptance Criteria:**
+
+- With `-RecordingId`, calls `SingleRecordingSearch` with `["id","query"]` payload.
+- With `-Title`, resolves matches and runs `SingleRecordingSearch` per recording, concatenating results.
+- Without recording scope, calls `Search` with `["query",null,null,null,maxResults]` payload.
+- Throws when not connected.
+
 ## API Surface
 
 ### Exported Cmdlets
@@ -226,6 +350,12 @@ Tests whether the user's recording library has been indexed for global search vi
 | `Get-GoogleRecordingWaveform` | Get waveform amplitude data. |
 | `Rename-GoogleRecording` | Rename a recording's title. |
 | `Save-GoogleRecordingAudio` | Download a recording's audio file. |
+| `Remove-GoogleRecording` | Delete one or more recordings. |
+| `Edit-GoogleRecordingAudio` | Crop or remove audio via EditingService. |
+| `Split-GoogleRecordingTranscript` | Split transcript segments and save audio. |
+| `Rename-GoogleRecordingSpeaker` | Rename a speaker within a recording. |
+| `Set-GoogleRecordingSpeaker` | Reassign transcript segments to a speaker. |
+| `Search-GoogleRecording` | Search transcripts globally or per recording. |
 | `Test-GoogleRecorderSearch` | Test if search indexing is ready. |
 
 ### Private Helpers
@@ -331,6 +461,13 @@ All RPC functions use:
        ├─ Get-SapisIdHash → Authorization: SAPISIDHASH header
        ├─ New-RecorderWebSession → CookieContainer
        └─ Invoke-WebRequest + ConvertFrom-Json
+
+Editing operations
+  └─ Invoke-EditingRpc (PlaybackService path override)
+       ├─ OpenEditSession → ApplyEdits → SaveAudio → CloseSession
+       ├─ Used by: Edit-GoogleRecordingAudio, Split-GoogleRecordingTranscript,
+       │         Rename-GoogleRecordingSpeaker, Set-GoogleRecordingSpeaker
+       └─ Editing RPCs: ApplyEdits, SaveAudio, CloseSession
 ```
 
 ## Data Model

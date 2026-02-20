@@ -14,6 +14,10 @@ function Invoke-RecorderRpc {
     .PARAMETER Body
         The JSON request body string.
 
+    .PARAMETER Service
+        The Recorder gRPC service to call. Defaults to PlaybackService. Use
+        EditingService for edit-session RPCs.
+
     .OUTPUTS
         Parsed JSON response (arrays).
     #>
@@ -23,7 +27,10 @@ function Invoke-RecorderRpc {
         [string]$Method,
 
         [Parameter(Mandatory)]
-        [string]$Body
+        [string]$Body,
+
+        [ValidateNotNullOrEmpty()]
+        [string]$Service = 'PlaybackService'
     )
 
     $session = $script:RecorderSession
@@ -31,7 +38,16 @@ function Invoke-RecorderRpc {
         throw 'Not connected to Google Recorder. Run Connect-GoogleRecorder first.'
     }
 
-    $rpcPathPrefix = '/$rpc/java.com.google.wireless.android.pixel.recorder.protos.PlaybackService'
+    $rpcPaths = @{
+        'PlaybackService' = '/$rpc/java.com.google.wireless.android.pixel.recorder.protos.PlaybackService'
+        'EditingService'  = '/$rpc/java.com.google.wireless.android.pixel.recorder.sharedclient.audioediting.protos.EditingService'
+    }
+
+    $rpcPathPrefix = $rpcPaths[$Service]
+    if (-not $rpcPathPrefix) {
+        $known = ($rpcPaths.Keys | Sort-Object) -join ', '
+        throw "Unknown service '$Service'. Supported services: $known."
+    }
     $contentType   = 'application/json+protobuf'
     $recorderBase  = 'https://recorder.google.com'
 
